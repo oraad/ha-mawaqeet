@@ -1,0 +1,15 @@
+{
+  "domain": "mawaqeet",
+  "name": "Mawaqeet",
+  "codeowners": [
+    "@oraad"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/oraad/ha-mawaqeet",
+  "iot_class": "calculated",
+  "issue_tracker": "https://github.com/oraad/ha-mawaqeet/issues",
+  "version": "0.1.0",
+  "requirements": [
+    "adhanpy==v1.0.5"
+  ]
+}

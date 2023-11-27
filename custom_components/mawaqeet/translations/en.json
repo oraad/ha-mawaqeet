@@ -1,0 +1,241 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "If you need help with the configuration have a look here: https://github.com/oraad/ha-mawaqeet",
+                "data": {
+                    "name": "Name",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "location": "Location",
+                    "calculation_method": "Calculation Method"
+                }
+            },
+            "adjustment": {
+                "data": {
+                    "madhab": "Madhab",
+                    "fajr_angle": "Fajr Angle",
+                    "ishaa_angle": "Ishaa Angle",
+                    "ishaa_interval": "Ishaa Interval",
+                    "high_latitude_rule": "High Latitude Rule",
+                    "fajr": "Fajr Offset",
+                    "shuruq": "Shuruq Offset",
+                    "dhuhr": "Dhuhr Offset",
+                    "asr": "Asr Offset",
+                    "maghrib": "Maghrib Offset",
+                    "ishaa": "Ishaa Offset"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "Device is already configured",
+            "coordinates_configured": "Device is already configured"
+        },
+        "error": {}
+    },
+    "options": {
+        "step": {
+            "adjustment": {
+                "data": {
+                    "madhab": "Madhab",
+                    "fajr_angle": "Fajr Angle",
+                    "ishaa_angle": "Ishaa Angle",
+                    "ishaa_interval": "Ishaa Interval",
+                    "high_latitude_method": "High Latitude Method",
+                    "fajr": "Fajr Offset",
+                    "shuruq": "Shuruq Offset",
+                    "dhuhr": "Dhuhr Offset",
+                    "asr": "Asr Offset",
+                    "maghrib": "Maghrib Offset",
+                    "ishaa": "Ishaa Offset"
+                }
+            }
+        }
+    },
+    "selector": {
+        "calculation_method": {
+            "options": {
+                "mwl": "Muslim World League",
+                "egyptian": "Egyptian",
+                "karachi": "Karachi",
+                "umm_al_qura": "Umm Al-Qura",
+                "dubai": "Dubai",
+                "msc": "Moon Sighting Committee",
+                "isna": "Islamic Society of North America",
+                "kuwait": "Kuwait",
+                "qatar": "Qatar",
+                "singapore": "Singapore",
+                "uoif": "Union of Islamic Organisations of France",
+                "custom": "Custom"
+            }
+        },
+        "madhab": {
+            "options": {
+                "hanafi": "Hanafi",
+                "shafi": "Shafi"
+            }
+        },
+        "high_latitude_rule": {
+            "options": {
+                "middle_of_the_night": "Middle of the Night",
+                "seventh_of_the_night": "Seventh of the Night",
+                "twilight_angle": "Twilight Angle"
+            }
+        }
+    },
+    "entity": {
+        "button": {
+            "fajr_time": {
+                "name": "Fajr Time"
+            },
+            "shuruq_time": {
+                "name": "Shuruq Time"
+            },
+            "dhuhr_time": {
+                "name": "Dhuhr Time"
+            },
+            "fajr_reminder": {
+                "name": "Fajr Reminder"
+            },
+            "shuruq_reminder": {
+                "name": "Shuruq Reminder"
+            },
+            "dhuhr_reminder": {
+                "name": "Dhuhr Reminder"
+            }
+        },
+        "sensor": {
+            "fajr": {
+                "name": "Fajr"
+            },
+            "shuruq": {
+                "name": "Shuruq"
+            },
+            "dhuhr": {
+                "name": "Dhuhr"
+            },
+            "asr": {
+                "name": "Asr"
+            },
+            "maghrib": {
+                "name": "Maghrib"
+            },
+            "ishaa": {
+                "name": "Ishaa"
+            },
+            "midnight": {
+                "name": "Midnight"
+            },
+            "last_third": {
+                "name": "Last Third"
+            },
+            "fajr_angle": {
+                "name": "Fajr Angle"
+            },
+            "ishaa_angle": {
+                "name": "Ishaa Angle"
+            },
+            "ishaa_interval": {
+                "name": "Ishaa Interval"
+            },
+            "night_length": {
+                "name": "Night Length (Shuruq)"
+            },
+            "night_duration": {
+                "name": "Night Duration (Fajr)"
+            },
+            "fajr_offset": {
+                "name": "Fajr Offset"
+            },
+            "shuruq_offset": {
+                "name": "Shuruq Offset"
+            },
+            "dhuhr_offset": {
+                "name": "Dhuhr Offset"
+            },
+            "asr_offset": {
+                "name": "Asr Offset"
+            },
+            "maghrib_offset": {
+                "name": "Maghrib Offset"
+            },
+            "ishaa_offset": {
+                "name": "Ishaa Offset"
+            },
+            "calculation_method": {
+                "name": "Calculation Method",
+                "state": {
+                    "mwl": "Muslim World League",
+                    "egyptian": "Egyptian",
+                    "karachi": "Karachi",
+                    "umm_al_qura": "Umm Al-Qura",
+                    "dubai": "Dubai",
+                    "msc": "Moon Sighting Committee",
+                    "isna": "Islamic Society of North America",
+                    "kuwait": "Kuwait",
+                    "qatar": "Qatar",
+                    "singapore": "Singapore",
+                    "uoif": "Union of Islamic Organisations of France",
+                    "custom": "Custom"
+                }
+            },
+            "high_latitude_rule": {
+                "name": "High Latitude Rule",
+                "state": {
+                    "middle_of_the_night": "Middle of the Night",
+                    "seventh_of_the_night": "Seventh of the Night",
+                    "twilight_angle": "Twilight Angle"
+                }
+            },
+            "madhab": {
+                "name": "Madhab/School",
+                "state": {
+                    "hanafi": "Hanafi",
+                    "shafi": "Shafi"
+                }
+            }
+        },
+        "event": {
+            "latest_prayer_time": {
+                "name": "Latest Prayer Time",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "fajr": "Fajr",
+                            "shuruq": "Shuruq",
+                            "dhuhr": "Dhuhr",
+                            "asr": "Asr",
+                            "maghrib": "Maghrib",
+                            "ishaa": "Ishaa",
+                            "midnight": "Midnight",
+                            "last_third": "Last Third"
+                        }
+                    }
+                }
+            },
+            "latest_prayer_reminder": {
+                "name": "Latest Prayer Reminder",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "fajr": "Fajr",
+                            "shuruq": "Shuruq",
+                            "dhuhr": "Dhuhr",
+                            "asr": "Asr",
+                            "maghrib": "Maghrib",
+                            "ishaa": "Ishaa",
+                            "midnight": "Midnight",
+                            "last_third": "Last Third"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "prayer_time": "On Prayer Time",
+            "prayer_reminder": "On Prayer Reminder"
+        }
+    }
+}

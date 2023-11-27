@@ -1,0 +1,144 @@
+blueprint:
+  name: Adhan
+  description: Mawaqeet Adhan
+  domain: automation
+  input:
+    device_id:
+      name: Location
+      description: Select Mawaqeet device
+      selector:
+        device:
+          filter:
+            integration: mawaqeet
+    enable_fajr:
+      name: 'Enable: Fajr Adhan'
+      default: true
+      selector:
+        boolean: {}
+    enable_dhuhr:
+      name: 'Enable: Dhuhr Adhan'
+      default: true
+      selector:
+        boolean: {}
+    enable_asr:
+      name: 'Enable: Asr Adhan'
+      default: true
+      selector:
+        boolean: {}
+    enable_maghrib:
+      name: 'Enable: Maghrib Adhan'
+      default: true
+      selector:
+        boolean: {}
+    enable_ishaa:
+      name: 'Enable: Ishaa Adhan'
+      default: true
+      selector:
+        boolean: {}
+    media_adhan_fajr:
+      name: Fajr Adhan Media
+      description: Select media_player and adhan for fajr
+      selector:
+        media:
+    media_adhan:
+      name: Adhan Media
+      description: Select media_player and adhan for all other prayers
+      selector:
+        media:
+
+trigger:
+  - platform: device
+    domain: mawaqeet
+    device_id: !input device_id
+    type: prayer_time
+
+variables:
+  enable_fajr: !input enable_fajr
+  enable_dhuhr: !input enable_dhuhr
+  enable_asr: !input enable_asr
+  enable_maghrib: !input enable_maghrib
+  enable_ishaa: !input enable_ishaa
+  current_prayer: "{{ trigger.event.data.prayer }}"
+  media_adhan_fajr: !input media_adhan_fajr
+  media_adhan: !input media_adhan
+
+condition: []
+
+action:
+  - choose:
+      - conditions:
+          - '{{current_prayer == "fajr"}}'
+          - '{{enable_fajr}}'
+        sequence:
+          - event: adhan_event
+            event_data:
+              prayer: fajr
+          - service: media_player.play_media
+            target:
+              entity_id: "{{ media_adhan_fajr.entity_id }}"
+            data:
+              media_content_id: "{{ media_adhan_fajr.media_content_id }}"
+              media_content_type: "{{ media_adhan_fajr.media_content_type }}"
+            metadata: {}
+
+      - conditions:
+          - '{{current_prayer == "dhuhr"}}'
+          - '{{enable_dhuhr}}'
+        sequence:
+          - event: adhan_event
+            event_data:
+              prayer: dhuhr
+          - service: media_player.play_media
+            target:
+              entity_id: "{{ media_adhan.entity_id }}"
+            data:
+              media_content_id: "{{ media_adhan.media_content_id }}"
+              media_content_type: "{{ media_adhan.media_content_type }}"
+            metadata: {}
+
+      - conditions:
+          - '{{current_prayer == "asr"}}'
+          - '{{enable_asr}}'
+        sequence:
+          - event: adhan_event
+            event_data:
+              prayer: asr
+          - service: media_player.play_media
+            target:
+              entity_id: "{{ media_adhan.entity_id }}"
+            data:
+              media_content_id: "{{ media_adhan.media_content_id }}"
+              media_content_type: "{{ media_adhan.media_content_type }}"
+            metadata: {}
+
+      - conditions:
+          - '{{current_prayer == "maghrib"}}'
+          - '{{enable_maghrib}}'
+        sequence:
+          - event: adhan_event
+            event_data:
+              prayer: maghrib
+          - service: media_player.play_media
+            target:
+              entity_id: "{{ media_adhan.entity_id }}"
+            data:
+              media_content_id: "{{ media_adhan.media_content_id }}"
+              media_content_type: "{{ media_adhan.media_content_type }}"
+            metadata: {}
+
+      - conditions:
+          - '{{current_prayer == "ishaa"}}'
+          - '{{enable_ishaa}}'
+        sequence:
+          - event: adhan_event
+            event_data:
+              prayer: ishaa
+          - service: media_player.play_media
+            target:
+              entity_id: "{{ media_adhan.entity_id }}"
+            data:
+              media_content_id: "{{ media_adhan.media_content_id }}"
+              media_content_type: "{{ media_adhan.media_content_type }}"
+            metadata: {}
+
+mode: single

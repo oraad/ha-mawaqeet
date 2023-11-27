@@ -5,4 +5,15 @@ default_config:
 logger:
   default: info
   logs:
-    custom_components.integration_blueprint: debug
+    custom_components.mawaqeet: debug
+
+media_player:
+  - platform: universal
+    name: Dummy Media Player
+    unique_id: dummy_media_player
+    device_class: speaker
+    commands:
+      play_media:
+        service: automation.trigger
+        data:
+          entity_id: automation.fire_adhan_event

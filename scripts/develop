@@ -10,8 +10,14 @@ if [[ ! -d "${PWD}/config" ]]; then
     hass --config "${PWD}/config" --script ensure_config
 fi
 
+mkdir -p "${PWD}/config/blueprints/automation"
+if [[ -d "${PWD}/config/blueprints/automation/mawaqeet" ]]; then
+    rm -rf "${PWD}/config/blueprints/automation/mawaqeet/"
+fi
+cp -r "${PWD}/blueprints/" "${PWD}/config/blueprints/automation/mawaqeet/"
+
 # Set the path to custom_components
-## This let's us have the structure we want <root>/custom_components/integration_blueprint
+## This let's us have the structure we want <root>/custom_components/mawaqeet
 ## while at the same time have Home Assistant configuration inside <root>/config
 ## without resulting to symlinks.
 export PYTHONPATH="${PYTHONPATH}:${PWD}/custom_components"
