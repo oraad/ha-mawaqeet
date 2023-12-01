@@ -10,7 +10,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_LOCATION
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -25,7 +24,6 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     DOMAIN,
-    LOGGER,
     CALCULATION_METHOD,
     MADHAB,
     FAJR_ANGLE,
@@ -135,7 +133,8 @@ def configured_instances(hass: HomeAssistant) -> set[str]:
     entries = []
     for entry in hass.config_entries.async_entries(DOMAIN):
         entries.append(
-            f"{entry.data.get(CONF_LOCATION).get(CONF_LATITUDE)}-{entry.data.get(CONF_LOCATION).get(CONF_LONGITUDE)}"
+            # f"{entry.data.get(CONF_LOCATION).get(CONF_LATITUDE)}-{entry.data.get(CONF_LOCATION).get(CONF_LONGITUDE)}"
+            str(entry.data.get(CONF_LOCATION))
         )
     return set(entries)
 
@@ -154,13 +153,15 @@ class MawaqeetFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             is_coordinates_predefined = (
-                f"{user_input.get(CONF_LATITUDE)}-{user_input.get(CONF_LONGITUDE)}"
+                # f"{user_input.get(CONF_LATITUDE)}-{user_input.get(CONF_LONGITUDE)}"
+                str(user_input.get(CONF_LOCATION))
                 in configured_instances(self.hass)
             )
 
             if is_coordinates_predefined:
-                _errors[CONF_LATITUDE] = "coordinates_configured"
-                _errors[CONF_LONGITUDE] = "coordinates_configured"
+                # _errors[CONF_LATITUDE] = "coordinates_configured"
+                # _errors[CONF_LONGITUDE] = "coordinates_configured"
+                _errors[CONF_LOCATION] = "coordinates_configured"
 
             if len(_errors) == 0:
                 self.user_data = user_input
