@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for mawaqeet."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -235,7 +236,9 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator):
         }
 
         async def fire_event(dt: datetime):
-            self.hass.bus.async_fire(MAWAQEET_EVENT, event_data, time_fired=dt.time())
+            self.hass.bus.async_fire(
+                MAWAQEET_EVENT, event_data, time_fired=dt.timestamp()
+            )
 
         return fire_event
 
