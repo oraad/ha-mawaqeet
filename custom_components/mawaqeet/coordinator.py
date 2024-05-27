@@ -235,7 +235,7 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator):
         }
 
         async def fire_event(dt: datetime):
-            self.hass.bus.async_fire(MAWAQEET_EVENT, event_data, time_fired=dt)
+            self.hass.bus.async_fire(MAWAQEET_EVENT, event_data, time_fired=dt.time())
 
         return fire_event
 
