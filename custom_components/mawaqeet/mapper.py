@@ -14,9 +14,10 @@ from .calculation_method import (
     CALCULATION_METHOD_PARAMETERS,
     PrayerAdjustments,
 )
-from .const import ISHAA_ANGLE, ISHAA_INTERVAL, METHOD_ADJUSTMENTS
+from .const import FAJR_ANGLE, ISHAA_ANGLE, ISHAA_INTERVAL, METHOD_ADJUSTMENTS
 from .enum import CalculationMethod, HighLatitudeRule, Madhab
 
+ADHANPY_FAJR_ANGLE = "fajr_angle"
 ADHANPY_ISHAA_ANGLE = "isha_angle"
 ADHANPY_ISHAA_INTERVAL = "isha_interval"
 
@@ -63,8 +64,12 @@ class CalculationMethodMapper:
                 PrayerAdjustmentMapper.to_adhanpy(method_adj)
             )
 
+        if (fajr_angle := calc_method_params.get(FAJR_ANGLE)) is not None:
+            calculation_parameters[ADHANPY_FAJR_ANGLE] = fajr_angle
+
         if (ishaa_angle := calc_method_params.get(ISHAA_ANGLE)) is not None:
             calculation_parameters[ADHANPY_ISHAA_ANGLE] = ishaa_angle
+
         if (ishaa_interval := calc_method_params.get(ISHAA_INTERVAL)) is not None:
             calculation_parameters[ADHANPY_ISHAA_INTERVAL] = ishaa_interval
 

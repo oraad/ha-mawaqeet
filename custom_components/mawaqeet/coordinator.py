@@ -121,12 +121,12 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator[MawaqeetData]):
         options = self.config_entry.options
 
         calculation_method: str = data.get(
-            CALCULATION_METHOD, CalculationMethod.MUSLIM_WORLD_LEAGUE
+            CALCULATION_METHOD, str(CalculationMethod.MUSLIM_WORLD_LEAGUE)
         )
 
-        fajr_angle: float | None = options.get(FAJR_ANGLE)
-        ishaa_angle: float | None = options.get(ISHAA_ANGLE)
-        ishaa_interval: int | None = options.get(ISHAA_INTERVAL)
+        fajr_angle: float = options.get(FAJR_ANGLE, 0.0)
+        ishaa_angle: float = options.get(ISHAA_ANGLE, 0.0)
+        ishaa_interval: int = options.get(ISHAA_INTERVAL, 0)
 
         madhab: str = options.get(MADHAB, Madhab.SHAFI)
         high_latitude_rule: str = options.get(
