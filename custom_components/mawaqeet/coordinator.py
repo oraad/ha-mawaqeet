@@ -57,6 +57,7 @@ if TYPE_CHECKING:
 type NightTimes = tuple[timedelta, datetime, datetime]
 type PrayerTimeEntries = dict[PrayerTime, datetime]
 type PrayerTimeConfig = dict[PrayerTimeOption, Any]
+type Coordinates = tuple[float, float]
 
 
 class MawaqeetData(TypedDict):
@@ -153,8 +154,8 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator[MawaqeetData]):
 
         return calculation_parameters
 
-    def __get_mawaqeet_parameters(self) -> tuple[Any, CalculationParameters]:
-        location: dict = self.config_entry.data.get(CONF_LOCATION, {})
+    def __get_mawaqeet_parameters(self) -> tuple[Coordinates, CalculationParameters]:
+        location: dict[str, float] = self.config_entry.data.get(CONF_LOCATION, {})
         latitude: float = location.get(CONF_LATITUDE, 0.0)
         longitude: float = location.get(CONF_LONGITUDE, 0.0)
 
