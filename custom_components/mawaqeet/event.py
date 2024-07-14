@@ -3,27 +3,31 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Literal, TypedDict
 
-from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
-from homeassistant.core import HomeAssistant, Event, callback
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
+from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
+from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import (
     DOMAIN,
     LOGGER,
     MAWAQEET_EVENT,
-    PRAYER_TIME_TRIGGER,
-    PRAYER_REMINDER_TRIGGER,
     PRAYER,
+    PRAYER_REMINDER_TRIGGER,
+    PRAYER_TIME_TRIGGER,
 )
-from .coordinator import MawaqeetDataUpdateCoordinator
 from .entity import MawaqeetEntity
 from .enum import PrayerTime
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import MawaqeetDataUpdateCoordinator
 
 LATEST_PRAYER_TIME = "latest_prayer_time"
 LATEST_PRAYER_REMINDER = "latest_prayer_reminder"
@@ -31,9 +35,22 @@ LATEST_PRAYER_REMINDER = "latest_prayer_reminder"
 PRAYER_TIMES = [str(prayer_time) for prayer_time in PrayerTime]
 
 
-@dataclass
+class MawaqeetEventData(TypedDict):
+    """Mawaqeet Event Data."""
+
+    device_id: str
+    type: str
+    prayer: str
+
+
+type TRIGGER_TYPE = Literal["prayer_time", "prayer_reminder"] | None
+
+
+@dataclass(frozen=True)
 class MawaqeetEventEntityDescription(EventEntityDescription):
-    trigger_type: str = None
+    """Mawaqeet Event Entity Description."""
+
+    trigger_type: TRIGGER_TYPE = None
 
 
 ENTITY_DESCRIPTIONS = (
@@ -56,7 +73,7 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
-):
+) -> None:
     """Set up the event platform."""
     coordinator: MawaqeetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_devices(
@@ -86,18 +103,18 @@ class MawaqeetEvent(MawaqeetEntity, EventEntity):
         """Register callbacks."""
 
         @callback
-        def filter_event(event: Event):
+        def filter_event(event_data: MawaqeetEventData) -> bool:
             LOGGER.debug(
                 "trigger_type: %s, device_id: %s, event_type: %s, bool result: %s",
                 self.entity_description.trigger_type,
-                event[CONF_DEVICE_ID],
-                event[CONF_TYPE],
-                event[CONF_DEVICE_ID] == self.coordinator.device.device_id
-                and event[CONF_TYPE] == self.entity_description.trigger_type,
+                event_data[CONF_DEVICE_ID],
+                event_data[CONF_TYPE],
+                event_data[CONF_DEVICE_ID] == self.coordinator.device.device_id
+                and event_data[CONF_TYPE] == self.entity_description.trigger_type,
             )
             return (
-                event[CONF_DEVICE_ID] == self.coordinator.device.device_id
-                and event[CONF_TYPE] == self.entity_description.trigger_type
+                event_data[CONF_DEVICE_ID] == self.coordinator.device.device_id
+                and event_data[CONF_TYPE] == self.entity_description.trigger_type
             )
 
         self.hass.bus.async_listen(
@@ -107,9 +124,8 @@ class MawaqeetEvent(MawaqeetEntity, EventEntity):
         )
 
     @callback
-    def _async_handle_event(self, event: Event) -> None:
+    def _async_handle_event(self, event: Event[MawaqeetEventData]) -> None:
         """Handle event."""
-
         prayer = event.data.get(PRAYER)
         self._trigger_event(prayer)
         self.async_write_ha_state()

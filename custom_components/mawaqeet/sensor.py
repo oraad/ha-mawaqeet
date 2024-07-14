@@ -1,20 +1,28 @@
 """Sensor platform for mawaqeet."""
+
 from __future__ import annotations
 
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from typing import TYPE_CHECKING, Any
+
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
-    SensorDeviceClass,
 )
+from homeassistant.components.sensor.const import SensorDeviceClass
+from homeassistant.const import EntityCategory
 
 from .const import DOMAIN
-from .coordinator import MawaqeetDataUpdateCoordinator
 from .entity import MawaqeetEntity
 from .enum import PrayerTime, PrayerTimeOption
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import MawaqeetDataUpdateCoordinator
 
 ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -67,25 +75,6 @@ ENTITY_DESCRIPTIONS = (
         translation_key=PrayerTimeOption.MADHAB,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # SensorEntityDescription(
-    #     key=PrayerTimeOption.FAJR_ANGLE,
-    #     translation_key=PrayerTimeOption.FAJR_ANGLE,
-    #     native_unit_of_measurement="°",
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
-    # SensorEntityDescription(
-    #     key=PrayerTimeOption.ISHAA_ANGLE,
-    #     translation_key=PrayerTimeOption.ISHAA_ANGLE,
-    #     native_unit_of_measurement="°",
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
-    # SensorEntityDescription(
-    #     key=PrayerTimeOption.ISHAA_INTERVAL,
-    #     translation_key=PrayerTimeOption.ISHAA_INTERVAL,
-    #     native_unit_of_measurement="min",
-    #     suggested_display_precision=0,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
     SensorEntityDescription(
         key=PrayerTimeOption.HIGH_LATITUDE_RULE,
         translation_key=PrayerTimeOption.HIGH_LATITUDE_RULE,
@@ -95,7 +84,7 @@ ENTITY_DESCRIPTIONS = (
         key=PrayerTimeOption.NIGHT_LENGTH,
         translation_key=PrayerTimeOption.NIGHT_LENGTH,
         native_unit_of_measurement="ms",
-        unit_of_measurement="h",
+        suggested_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -103,58 +92,16 @@ ENTITY_DESCRIPTIONS = (
         key=PrayerTimeOption.NIGHT_DURATION,
         translation_key=PrayerTimeOption.NIGHT_DURATION,
         native_unit_of_measurement="s",
-        unit_of_measurement="h",
+        suggested_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    # SensorEntityDescription(
-    #     key=PrayerTimeOption.FAJR_OFFSET,
-    #     translation_key=PrayerTimeOption.FAJR_OFFSET,
-    #     native_unit_of_measurement="min",
-    #     suggested_display_precision=0,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
-    # SensorEntityDescription(
-    #     key=PrayerTimeOption.SHURUQ_OFFSET,
-    #     translation_key=PrayerTimeOption.SHURUQ_OFFSET,
-    #     native_unit_of_measurement="min",
-    #     suggested_display_precision=0,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
-    # SensorEntityDescription(
-    #     key=PrayerTimeOption.DHUHR_OFFSET,
-    #     translation_key=PrayerTimeOption.DHUHR_OFFSET,
-    #     native_unit_of_measurement="min",
-    #     suggested_display_precision=0,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
-    # SensorEntityDescription(
-    #     key=PrayerTimeOption.ASR_OFFSET,
-    #     translation_key=PrayerTimeOption.ASR_OFFSET,
-    #     native_unit_of_measurement="min",
-    #     suggested_display_precision=0,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
-    # SensorEntityDescription(
-    #     key=PrayerTimeOption.MAGHRIB_OFFSET,
-    #     translation_key=PrayerTimeOption.MAGHRIB_OFFSET,
-    #     native_unit_of_measurement="min",
-    #     suggested_display_precision=0,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
-    # SensorEntityDescription(
-    #     key=PrayerTimeOption.ISHAA_OFFSET,
-    #     translation_key=PrayerTimeOption.ISHAA_OFFSET,
-    #     native_unit_of_measurement="min",
-    #     suggested_display_precision=0,
-    #     entity_category=EntityCategory.DIAGNOSTIC,
-    # ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
-):
+) -> None:
     """Set up the sensor platform."""
     coordinator: MawaqeetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_devices(
@@ -179,6 +126,13 @@ class MawaqeetSensor(MawaqeetEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> datetime | Any | None:
         """Return the native value of the sensor."""
-        return self.coordinator.data.get(self.entity_description.key)
+        key = self.entity_description.key
+        if key in PrayerTime:
+            prayer_time = PrayerTime(key)
+            value = self.coordinator.data["prayer_times"].get(prayer_time)
+        elif key in PrayerTimeOption:
+            prayer_time_option = PrayerTimeOption(key)
+            value = self.coordinator.data["prayer_times_config"].get(prayer_time_option)
+        return value

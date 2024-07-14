@@ -1,34 +1,57 @@
-from typing import TypedDict
+"""Calculation Method."""
+
+from dataclasses import dataclass
+from typing import NotRequired, TypedDict
 
 from .const import (
+    ASR,
+    DHUHR,
     FAJR_ANGLE,
     ISHAA_ANGLE,
     ISHAA_INTERVAL,
-    METHOD_ADJUSTMENTS,
-    FAJR,
-    SHURUQ,
-    DHUHR,
-    ASR,
     MAGHRIB,
-    ISHAA,
+    METHOD_ADJUSTMENTS,
+    SHURUQ,
 )
 from .enum import CalculationMethod
 
 
+@dataclass(frozen=True)
+class PrayerAdjustments:
+    """Prayer Adjustments."""
+
+    fajr: int = 0
+    # Fajr offset in minutes
+    shuruq: int = 0
+    # Sunrise offset in minutes
+    dhuhr: int = 0
+    # Dhuhr offset in minutes
+    asr: int = 0
+    # Asr offset in minutes
+    maghrib: int = 0
+    # Maghrib offset in minutes
+    ishaa: int = 0
+    # Isha offset in minutes
+
+
 class MethodAdjustment(TypedDict):
-    fajr: int
-    shuruq: int
-    dhuhr: int
-    asr: int
-    maghrib: int
-    ishaa: int
+    """Method adjustment dict."""
+
+    fajr: NotRequired[int]
+    shuruq: NotRequired[int]
+    dhuhr: NotRequired[int]
+    asr: NotRequired[int]
+    maghrib: NotRequired[int]
+    ishaa: NotRequired[int]
 
 
 class CalculationMethodParameter(TypedDict):
-    fajr_angle: float
-    ishaa_angle: float
-    ishaa_interval: int
-    method_adjustments: MethodAdjustment
+    """Calculation Method Paramter."""
+
+    fajr_angle: NotRequired[float]
+    ishaa_angle: NotRequired[float]
+    ishaa_interval: NotRequired[int]
+    method_adjustments: NotRequired[MethodAdjustment]
 
 
 CALCULATION_METHOD_PARAMETERS: dict[CalculationMethod, CalculationMethodParameter] = {

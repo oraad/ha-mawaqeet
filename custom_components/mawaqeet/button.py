@@ -1,29 +1,32 @@
 """Sensor platform for mawaqeet."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
-from homeassistant.const import EntityCategory, CONF_TYPE
-from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
-    ButtonDeviceClass,
 )
+from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 
 from .const import (
     DOMAIN,
     MAWAQEET_EVENT,
-    PRAYER_TIME_TRIGGER,
-    PRAYER_REMINDER_TRIGGER,
     PRAYER,
+    PRAYER_REMINDER_TRIGGER,
+    PRAYER_TIME_TRIGGER,
 )
-from .coordinator import MawaqeetDataUpdateCoordinator
 from .entity import MawaqeetEntity
 from .enum import PrayerTime
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+    from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import MawaqeetDataUpdateCoordinator
 
 FAJR_TIME = "fajr_time"
 SHURUQ_TIME = "shuruq_time"
@@ -34,10 +37,12 @@ SHURUQ_REMINDER = "shuruq_reminder"
 DHUHR_REMINDER = "dhuhr_reminder"
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class MawaqeetButtonEntityDescription(ButtonEntityDescription):
-    prayer: PrayerTime = None
-    trigger_type: str = None
+    """Mawaqeet Button Entity."""
+
+    prayer: PrayerTime
+    trigger_type: str
 
 
 ENTITY_DESCRIPTIONS = (
@@ -88,7 +93,7 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
-):
+) -> None:
     """Set up the button platform."""
     coordinator: MawaqeetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_devices(
@@ -115,13 +120,14 @@ class MawaqeetButton(MawaqeetEntity, ButtonEntity):
         self.entity_description = entity_description
 
     async def async_press(self) -> None:
+        """Button press."""
         device_id = self.coordinator.device.device_id
-        type = self.entity_description.trigger_type
+        trigger_type = self.entity_description.trigger_type
         prayer = self.entity_description.prayer
 
         event_data = {
             CONF_DEVICE_ID: device_id,
-            CONF_TYPE: type,
+            CONF_TYPE: trigger_type,
             PRAYER: prayer,
         }
         self.hass.bus.async_fire(MAWAQEET_EVENT, event_data)

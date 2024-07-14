@@ -1,7 +1,11 @@
+"""Enums."""
+
 from enum import StrEnum, auto
 
 
 class PrayerTime(StrEnum):
+    """Prayer Times."""
+
     FAJR = auto()
     SHURUQ = auto()
     DHUHR = auto()
@@ -13,6 +17,8 @@ class PrayerTime(StrEnum):
 
 
 class PrayerTimeOption(StrEnum):
+    """Prayer Time Options."""
+
     CALCULATION_METHOD = auto()
     MADHAB = auto()
     NIGHT_LENGTH = auto()  # From Maghtib to Shuruq
@@ -30,6 +36,8 @@ class PrayerTimeOption(StrEnum):
 
 
 class PrayerTimeReminder(StrEnum):
+    """Prayer Time Reminder."""
+
     FAJR_REMINDER = auto()
     SHURUQ_REMINDER = auto()
     DHUHR_REMINDER = auto()
@@ -39,6 +47,8 @@ class PrayerTimeReminder(StrEnum):
 
 
 class CalculationMethod(StrEnum):
+    """Calculation Methods."""
+
     MUSLIM_WORLD_LEAGUE = "mwl"
     EGYPTIAN = "egyptian"
     KARACHI = "karachi"
@@ -54,6 +64,8 @@ class CalculationMethod(StrEnum):
 
 
 class PrayerAdjustment(StrEnum):
+    """Prayer Adjustment."""
+
     FAJR = auto()
     SHURUQ = auto()
     DHUHR = auto()
@@ -63,11 +75,15 @@ class PrayerAdjustment(StrEnum):
 
 
 class Madhab(StrEnum):
+    """Madhab."""
+
     SHAFI = auto()
     HANAFI = auto()
 
 
 class HighLatitudeRule(StrEnum):
+    """High Latitude Rule."""
+
     MIDDLE_OF_THE_NIGHT = auto()
     SEVENTH_OF_THE_NIGHT = auto()
     TWILIGHT_ANGLE = auto()

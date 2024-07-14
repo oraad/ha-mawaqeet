@@ -1,26 +1,26 @@
-from typing import Any
-import logging
-import voluptuous as vol
+"""Device Trigger."""
 
+from typing import Any
+
+import voluptuous as vol
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_EVENT_DATA,
     CONF_PLATFORM,
     CONF_TYPE,
 )
-
-from homeassistant.core import HomeAssistant, CALLBACK_TYPE
-from homeassistant.components.homeassistant.triggers import event as event_trigger
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
-    LOGGER,
     MAWAQEET_EVENT,
-    PRAYER_TIME_TRIGGER,
     PRAYER_REMINDER_TRIGGER,
+    PRAYER_TIME_TRIGGER,
 )
 
 DEVICE = "device"
@@ -36,10 +36,10 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 
 async def async_get_triggers(
-    hass: HomeAssistant, device_id: str
+    hass: HomeAssistant,  # noqa: ARG001
+    device_id: str,
 ) -> list[dict[str, Any]]:
     """Return a list of triggers."""
-
     triggers = []
 
     # Determine which triggers are supported by this device_id ...
@@ -57,13 +57,6 @@ async def async_get_triggers(
     return triggers
 
 
-# async def async_get_trigger_capabilities(
-#     hass: HomeAssistant, config: ConfigType
-# ) -> dict[str, vol.Schema]:
-#     """List trigger capabilities."""
-#     return await toggle_entity.async_get_trigger_capabilities(hass, config)
-
-
 async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
@@ -71,12 +64,11 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-
-    event_config: vol.Schema = event_trigger.TRIGGER_SCHEMA(
+    event_config = event_trigger.TRIGGER_SCHEMA(
         {
-            event_trigger.CONF_PLATFORM: EVENT,
+            CONF_PLATFORM: EVENT,
             event_trigger.CONF_EVENT_TYPE: MAWAQEET_EVENT,
-            event_trigger.CONF_EVENT_DATA: {
+            CONF_EVENT_DATA: {
                 CONF_DEVICE_ID: config[CONF_DEVICE_ID],
                 CONF_TYPE: config[CONF_TYPE],
             },

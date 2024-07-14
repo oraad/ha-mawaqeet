@@ -1,37 +1,42 @@
 """Adds config flow for Mawaqeet."""
+
 from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
-    FlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_LOCATION
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-    SelectOptionDict,
+    LocationSelector,
+    LocationSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    LocationSelector,
-    LocationSelectorConfig,
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import (
-    DOMAIN,
     CALCULATION_METHOD,
-    MADHAB,
+    DOMAIN,
     FAJR_ANGLE,
+    HIGH_LATITUDE_RULE,
     ISHAA_ANGLE,
     ISHAA_INTERVAL,
-    HIGH_LATITUDE_RULE,
+    MADHAB,
 )
-from .enum import PrayerAdjustment, CalculationMethod, Madhab, HighLatitudeRule
+from .enum import CalculationMethod, HighLatitudeRule, Madhab, PrayerAdjustment
+
+if TYPE_CHECKING:
+    from homeassistant.data_entry_flow import FlowResult
 
 DATA_SCHEMA = {
     vol.Required(CONF_NAME): str,
@@ -81,22 +86,22 @@ ADJUSTMENT_SCHEMA = {
             translation_key=MADHAB,
         )
     ),
-    vol.Optional(str(PrayerAdjustment.FAJR), default=0): NumberSelector(
+    vol.Optional(str(PrayerAdjustment.FAJR), 0): NumberSelector(
         NumberSelectorConfig(min=-30, max=30, mode=NumberSelectorMode.BOX, step=1)
     ),
-    vol.Optional(str(PrayerAdjustment.SHURUQ), default=0): NumberSelector(
+    vol.Optional(str(PrayerAdjustment.SHURUQ), 0): NumberSelector(
         NumberSelectorConfig(min=-30, max=30, mode=NumberSelectorMode.BOX, step=1)
     ),
-    vol.Optional(str(PrayerAdjustment.DHUHR), default=0): NumberSelector(
+    vol.Optional(str(PrayerAdjustment.DHUHR), 0): NumberSelector(
         NumberSelectorConfig(min=-30, max=30, mode=NumberSelectorMode.BOX, step=1)
     ),
-    vol.Optional(str(PrayerAdjustment.ASR), default=0): NumberSelector(
+    vol.Optional(str(PrayerAdjustment.ASR), 0): NumberSelector(
         NumberSelectorConfig(min=-30, max=30, mode=NumberSelectorMode.BOX, step=1)
     ),
-    vol.Optional(str(PrayerAdjustment.MAGHRIB), default=0): NumberSelector(
+    vol.Optional(str(PrayerAdjustment.MAGHRIB), 0): NumberSelector(
         NumberSelectorConfig(min=-30, max=30, mode=NumberSelectorMode.BOX, step=1)
     ),
-    vol.Optional(str(PrayerAdjustment.ISHAA), default=0): NumberSelector(
+    vol.Optional(str(PrayerAdjustment.ISHAA), 0): NumberSelector(
         NumberSelectorConfig(min=-30, max=30, mode=NumberSelectorMode.BOX, step=1)
     ),
 }
@@ -104,13 +109,11 @@ ADJUSTMENT_SCHEMA = {
 
 def _get_data_schema(
     hass: HomeAssistant, config_entry: ConfigEntry | None = None
-) -> vol.Schema:
+) -> dict:
     """Get a schema with default values."""
     if config_entry is None:
         return {
             CONF_NAME: hass.config.location_name,
-            # CONF_LATITUDE: hass.config.latitude,
-            # CONF_LONGITUDE: hass.config.longitude,
             CONF_LOCATION: {
                 CONF_LATITUDE: hass.config.latitude,
                 CONF_LONGITUDE: hass.config.longitude,
@@ -121,8 +124,6 @@ def _get_data_schema(
     return {
         CONF_NAME: config_entry.data.get(CONF_NAME),
         CONF_LOCATION: config_entry.data.get(CONF_LOCATION),
-        # CONF_LATITUDE: config_entry.data.get(CONF_LATITUDE),
-        # CONF_LONGITUDE: config_entry.data.get(CONF_LONGITUDE),
         CALCULATION_METHOD: config_entry.data.get(CALCULATION_METHOD),
     }
 
@@ -130,12 +131,10 @@ def _get_data_schema(
 @callback
 def configured_instances(hass: HomeAssistant) -> set[str]:
     """Return a set of configured instances."""
-    entries = []
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        entries.append(
-            # f"{entry.data.get(CONF_LOCATION).get(CONF_LATITUDE)}-{entry.data.get(CONF_LOCATION).get(CONF_LONGITUDE)}"
-            str(entry.data.get(CONF_LOCATION))
-        )
+    entries = [
+        str(entry.data.get(CONF_LOCATION))
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    ]
     return set(entries)
 
 
@@ -152,15 +151,11 @@ class MawaqeetFlowHandler(ConfigFlow, domain=DOMAIN):
         _errors = {}
 
         if user_input is not None:
-            is_coordinates_predefined = (
-                # f"{user_input.get(CONF_LATITUDE)}-{user_input.get(CONF_LONGITUDE)}"
-                str(user_input.get(CONF_LOCATION))
-                in configured_instances(self.hass)
-            )
+            is_coordinates_predefined = str(
+                user_input.get(CONF_LOCATION)
+            ) in configured_instances(self.hass)
 
             if is_coordinates_predefined:
-                # _errors[CONF_LATITUDE] = "coordinates_configured"
-                # _errors[CONF_LONGITUDE] = "coordinates_configured"
                 _errors[CONF_LOCATION] = "coordinates_configured"
 
             if len(_errors) == 0:
@@ -176,6 +171,7 @@ class MawaqeetFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_adjustment(self, user_input: dict | None = None) -> FlowResult:
+        """Step adjustment."""
         _errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -214,7 +210,8 @@ class OptionsFlowHandler(OptionsFlow):
         """Initialize the Mawaqeet OptionsFlow."""
         self._config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input: dict | None = None) -> Any:
+        """Step init."""
         return await self.async_step_adjustment(user_input)
 
     async def async_step_adjustment(self, user_input: dict | None = None) -> FlowResult:
