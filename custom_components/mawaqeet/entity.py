@@ -29,6 +29,7 @@ class MawaqeetEntity(CoordinatorEntity[MawaqeetDataUpdateCoordinator]):
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.data[CONF_NAME],
             manufacturer=NAME,
-            model=integration.version,
+            model=NAME,
+            sw_version=str(integration.version) if integration.version else None,
             entry_type=DeviceEntryType.SERVICE,
         )

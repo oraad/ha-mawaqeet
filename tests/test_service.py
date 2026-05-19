@@ -6,6 +6,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CO
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mawaqeet.const import (
@@ -106,6 +107,8 @@ async def test_trigger_event_requires_loaded_entry(hass: HomeAssistant) -> None:
         options={MADHAB: "shafi"},
     )
     entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, DOMAIN)
 
     with pytest.raises(ServiceValidationError, match="not loaded"):
         await hass.services.async_call(
