@@ -10,7 +10,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
+from homeassistant.helpers import config_validation as cv
 
+from .const import DOMAIN
 from .coordinator import MawaqeetDataUpdateCoordinator
 from .data import MawaqeetRuntimeData
 from .options import migrate_options, options_need_migration
@@ -20,6 +22,8 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
     from .data import MawaqeetConfigEntry
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PARALLEL_UPDATES = 1
 

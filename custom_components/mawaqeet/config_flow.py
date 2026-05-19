@@ -29,6 +29,7 @@ from homeassistant.helpers.selector import (
 from .const import (
     CALCULATION_METHOD,
     DEFAULT_REMINDER_MINUTES,
+    DOCUMENTATION_URL,
     DOMAIN,
     FAJR_ANGLE,
     HIGH_LATITUDE_RULE,
@@ -204,7 +205,10 @@ class MawaqeetFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, last_step=False
+            step_id="user",
+            data_schema=data_schema,
+            description_placeholders={"documentation_url": DOCUMENTATION_URL},
+            last_step=False,
         )
 
     async def async_step_adjustment(

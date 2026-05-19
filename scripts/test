@@ -7,10 +7,10 @@ cd "$(dirname "$0")/.."
 if [ "${HA_TEST_LATEST:-0}" = "1" ]; then
   python3 -m pip install -r requirements-test.txt
   python3 -m pip install -U homeassistant
-  python3 -c "import homeassistant; print('homeassistant', homeassistant.__version__)"
+  python3 -c "from homeassistant.const import __version__; print('homeassistant', __version__)"
 else
   python3 -m pip install -r requirements-test.txt
-  python3 -c "import homeassistant; print('homeassistant', homeassistant.__version__)"
+  python3 -c "from homeassistant.const import __version__; print('homeassistant', __version__)"
 fi
 
 python3 -m pytest tests/ -v "$@"

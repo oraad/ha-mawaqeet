@@ -7,6 +7,7 @@ LOGGER: Logger = getLogger(__package__)
 NAME = "Mawaqeet"
 DOMAIN = "mawaqeet"
 ATTRIBUTION = ""
+DOCUMENTATION_URL = "https://github.com/oraad/ha-mawaqeet"
 
 MAWAQEET_EVENT = "mawaqeet_event"
 PRAYER_TIME_TRIGGER = "prayer_time"

@@ -4,7 +4,7 @@
         "step": {
             "user": {
                 "title": "إعداد مواقيت",
-                "description": "للمساعدة في الإعداد راجع: https://github.com/oraad/ha-mawaqeet",
+                "description": "للمساعدة في الإعداد، راجع {documentation_url}",
                 "data_description": {
                     "name": "اسم هذا الموقع في Home Assistant.",
                     "location": "الموقع على الخريطة لحساب أوقات الصلاة.",

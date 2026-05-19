@@ -4,7 +4,7 @@
         "step": {
             "user": {
                 "title": "Set up Mawaqeet",
-                "description": "If you need help with the configuration have a look here: https://github.com/oraad/ha-mawaqeet",
+                "description": "If you need help with the configuration, see {documentation_url}",
                 "data": {
                     "name": "Name",
                     "latitude": "Latitude",
