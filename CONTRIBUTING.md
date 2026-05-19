@@ -54,6 +54,8 @@ Run the test suite with Python **3.14** after `scripts/setup` (installs all depe
 scripts/test
 ```
 
+Coverage is enforced at 95% for `custom_components/mawaqeet` (same flags as CI).
+
 - **Pinned Home Assistant** (default): uses `homeassistant==…` from [`requirements-test.txt`](requirements-test.txt), matching the supported release.
 - **Latest Home Assistant** (same as CI “latest” leg; upgrades `homeassistant` and `pytest-homeassistant-custom-component` together):
 

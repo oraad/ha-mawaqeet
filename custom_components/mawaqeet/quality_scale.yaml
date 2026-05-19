@@ -10,10 +10,11 @@ rules:
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-installation-parameters: done
   docs-removal-instructions: done
+  entity-event-setup: done
   entity-unique-id: done
   entity-unavailable:
     status: exempt
@@ -28,9 +29,12 @@ rules:
   unique-config-entry: done
 
   # Silver
+  action-exceptions:
+    status: exempt
+    comment: trigger_event validates config entry and prayer; failures surface as service errors.
   config-entry-unloading: done
   docs-configuration-parameters: done
-  entity-event-setup: done
+  docs-installation-parameters: done
   log-when-unavailable:
     status: exempt
     comment: No network device; prayer times are calculated locally.
@@ -38,27 +42,56 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: No credentials or external accounts.
-  reconfiguration-flow: done
-  test-coverage:
-    status: todo
-    comment: Add CI coverage reporting and reach 95% before claiming Silver in manifest.
+  test-coverage: done
 
-  # Gold (partial)
+  # Gold
   devices: done
+  diagnostics: done
   docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
+  entity-category: done
+  entity-device-class: done
   entity-translations: done
   icon-translations: done
+  reconfiguration-flow: done
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: adhanpy is sync-only; platinum needs an async PyPI client or upstream asyncio in adhanpy.
+  inject-websession:
+    status: exempt
+    comment: No HTTP client dependency; local calculation only.
+  strict-typing:
+    status: todo
+    comment: Optional follow-up — mypy.ini exists; add CI when pursuing platinum.
 
   # Exempt — not applicable
   discovery:
     status: exempt
-    comment: Prayer times are calculated from location; no network discovery.
+    comment: Location-based setup; no hardware discovery.
   discovery-update-info:
     status: exempt
     comment: No discovery.
-  action-exceptions:
+  docs-supported-devices:
     status: exempt
-    comment: trigger_event has no exception handling requirements.
-  docs-actions: done
+    comment: Any map coordinates; not tied to specific hardware products.
+  dynamic-devices:
+    status: exempt
+    comment: One device per config entry created at setup.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Optional Midnight and Last Third sensors remain available; not required daily.
+  exception-translations:
+    status: exempt
+    comment: Config flow and services use standard HA validation errors.
+  repair-issues:
+    status: exempt
+    comment: Reconfigure flow covers location and method changes; no repair issues needed.
+  stale-devices:
+    status: exempt
+    comment: Device is removed when the config entry is removed.

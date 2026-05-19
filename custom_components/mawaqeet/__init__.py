@@ -7,8 +7,10 @@ https://github.com/oraad/ha-mawaqeet
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
 
@@ -37,7 +39,23 @@ PLATFORMS: list[Platform] = [
 async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
     """Set up the Mawaqeet integration."""
     async_setup_services(hass)
+    await _async_register_frontend(hass)
     return True
+
+
+async def _async_register_frontend(hass: HomeAssistant) -> None:
+    """Serve the Lovelace prayer card module under /mawaqeet/."""
+    if hass.data.get(DOMAIN, {}).get("frontend_registered"):
+        return
+
+    www = Path(__file__).parent / "www"
+    if not www.is_dir():
+        return
+
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig("/mawaqeet", www, cache_headers=False)]
+    )
+    hass.data.setdefault(DOMAIN, {})["frontend_registered"] = True
 
 
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry

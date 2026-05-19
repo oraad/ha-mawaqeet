@@ -27,6 +27,18 @@ max-complexity = 25
 [lint.per-file-ignores]
 "tests/**" = ["S101", "SLF001", "TC002", "PLR2004"]
 "tests/test_coordinator.py" = ["S101", "SLF001"]
-"scripts/**" = ["T201", "E501", "FBT001", "ARG001"]
+"scripts/**" = [
+    "T201",
+    "E501",
+    "FBT001",
+    "ARG001",
+    "S603",
+    "S607",
+    "EXE001",
+    "RUF003",
+    "F841",
+    "PLR0913",
+    "ERA001",
+]
 "custom_components/mawaqeet/coordinator.py" = ["TC002"]
 "custom_components/mawaqeet/device_trigger.py" = ["TC002"]

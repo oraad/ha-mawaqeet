@@ -4,6 +4,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CO
 from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.mawaqeet.calculation import async_compute_prayer_times
 from custom_components.mawaqeet.const import (
     CALCULATION_METHOD,
     DEFAULT_REMINDER_MINUTES,
@@ -13,6 +14,7 @@ from custom_components.mawaqeet.const import (
     REMINDER_MINUTES,
 )
 from custom_components.mawaqeet.coordinator import MawaqeetDataUpdateCoordinator
+from custom_components.mawaqeet.data import MawaqeetRuntimeData
 from custom_components.mawaqeet.enum import PrayerTime, prayer_reminder_minutes_key
 
 
@@ -33,12 +35,34 @@ async def test_prayer_times_computed(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    coordinator = MawaqeetDataUpdateCoordinator(hass, entry)
-    data = coordinator.get_new_prayer_times_info()
+    data = await async_compute_prayer_times(hass, entry)
 
     assert set(data["prayer_times"].keys()) == set(PrayerTime)
     for prayer_time in data["prayer_times"].values():
         assert prayer_time is not None
+
+
+async def test_coordinator_refresh(hass: HomeAssistant) -> None:
+    """Test coordinator refresh loads data via async calculation."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Home",
+            CONF_LOCATION: {CONF_LATITUDE: 51.5074, CONF_LONGITUDE: -0.1278},
+            CALCULATION_METHOD: "mwl",
+        },
+        options={MADHAB: "shafi"},
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = MawaqeetDataUpdateCoordinator(hass, entry)
+    entry.runtime_data = MawaqeetRuntimeData(coordinator=coordinator)
+    await coordinator.async_refresh()
+
+    assert coordinator.data is not None
+    assert set(coordinator.data["prayer_times"].keys()) == set(PrayerTime)
+
+    coordinator.clear_event_sub()
 
 
 async def test_refresh_schedules_callbacks(hass: HomeAssistant) -> None:
@@ -61,6 +85,7 @@ async def test_refresh_schedules_callbacks(hass: HomeAssistant) -> None:
 
     coordinator.clear_event_sub()
     coordinator.async_schedule_future_update(coordinator.data["prayer_times"])
+    coordinator.clear_event_sub()
 
 
 async def test_per_prayer_reminder_minutes(hass: HomeAssistant) -> None:

@@ -13,4 +13,10 @@ else
   python3 -c "from homeassistant.const import __version__; print('homeassistant', __version__)"
 fi
 
-python3 -m pytest tests/ -v "$@"
+python3 -m pip install pytest-cov
+
+python3 -m pytest tests/ -v \
+  --cov=custom_components/mawaqeet \
+  --cov-report=term-missing \
+  --cov-fail-under=95 \
+  "$@"
