@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerInfo
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -76,7 +76,9 @@ async def test_attach_trigger_fires(hass: HomeAssistant) -> None:
 
     fired = asyncio.Event()
 
-    async def action(_variables: dict | None = None) -> None:
+    async def action(run_variables: dict, _context: Context | None) -> None:
+        assert "trigger" in run_variables
+        assert run_variables["trigger"]["platform"] == "device"
         fired.set()
 
     trigger_config = {
