@@ -125,7 +125,7 @@ data:
 
 - **Adhan / media**: Trigger speakers or notifications on `latest_prayer_time` events (see blueprint).
 - **Reminders**: Automate lights, TTS, or mobile notifications on `latest_prayer_reminder` before each prayer.
-- **Dashboards**: Show next prayer sensors and today’s timetable on a Lovelace card.
+- **Dashboards**: Use the [Mawaqeet prayer Lovelace card](#dashboard-cards) (next prayer, horizontal/vertical timetable).
 - **Testing automations**: Call `mawaqeet.trigger_event` to simulate a prayer time or reminder without waiting for the schedule.
 
 ### Data updates
@@ -140,6 +140,65 @@ Prayer times are calculated locally (no cloud API). The coordinator refreshes at
 | High-latitude odd times | Enable custom method and set high-latitude rule if needed |
 | Reminders not firing | Options → prayer reminders enabled; per-prayer minutes set; automations listen to reminder events |
 | Duplicate location rejected | One entry per map position; remove or reconfigure the existing entry |
+
+## Dashboard cards
+
+The integration ships a custom Lovelace card that binds to a **Mawaqeet location device** and auto-discovers that device’s prayer timestamp sensors (no manual entity list).
+
+### Setup
+
+1. Add the card resource (served by the integration after restart):
+
+```yaml
+lovelace:
+  mode: storage
+  resources:
+    - url: /mawaqeet/mawaqeet-prayer-card.js
+      type: module
+```
+
+2. Add a card in the dashboard UI (**Mawaqeet Prayer**) or YAML:
+
+```yaml
+type: custom:mawaqeet-prayer-card
+device: DEVICE_ID_FROM_SETTINGS
+layout: next
+show_shuruq: false
+```
+
+Pick the device under **Settings → Devices & services → Mawaqeet →** your location. Each config entry is one device.
+
+### Layouts
+
+| `layout` | Description |
+| --- | --- |
+| `next` | Next prayer name, countdown, and following prayer |
+| `horizontal` | Compact row of all prayers (highlights next) |
+| `vertical` | Full list with optional relative times |
+| `combined` | Next prayer hero + horizontal strip |
+| `timeline` | Day timeline from Fajr to Ishaa |
+| `agenda` | “Earlier today” and “Upcoming” sections |
+
+By default the card shows the five daily prayers (Fajr, Dhuhr, Asr, Maghrib, Ishaa). Enable **Show Shuruq** in the card editor to include sunrise.
+
+### Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| Card type unknown | Add the Lovelace resource and restart Home Assistant |
+| No prayer times found | Select the correct Mawaqeet device; confirm the integration is loaded |
+| Wrong location | One card per device; add another card for a second config entry |
+
+### Rebuild the card (developers)
+
+Requires **Node.js 24 LTS** (see `.nvmrc`). CI runs the same steps in the [Frontend workflow](.github/workflows/frontend.yml).
+
+```bash
+cd custom_components/mawaqeet/frontend && npm ci && npm run test && npm run build
+# or: python scripts/build_frontend.py  (requires npm on PATH)
+```
+
+Output: `custom_components/mawaqeet/www/mawaqeet-prayer-card.js`
 
 ## Brand assets
 
