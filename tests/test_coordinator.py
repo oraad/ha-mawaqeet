@@ -54,8 +54,8 @@ async def test_refresh_schedules_callbacks(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    coordinator = MawaqeetDataUpdateCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    coordinator = entry.runtime_data.coordinator
 
     assert coordinator.data is not None
 
