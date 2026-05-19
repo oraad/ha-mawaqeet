@@ -55,7 +55,7 @@ scripts/test
 ```
 
 - **Pinned Home Assistant** (default): uses `homeassistant==…` from [`requirements-test.txt`](requirements-test.txt), matching the supported release.
-- **Latest Home Assistant** (same as CI “latest” leg):
+- **Latest Home Assistant** (same as CI “latest” leg; upgrades `homeassistant` and `pytest-homeassistant-custom-component` together):
 
 ```bash
 HA_TEST_LATEST=1 scripts/test

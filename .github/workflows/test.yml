@@ -47,9 +47,9 @@ jobs:
       - name: Install test requirements
         run: python3 -m pip install -r requirements-test.txt
 
-      - name: Upgrade Home Assistant to latest
+      - name: Upgrade Home Assistant and test plugin to latest
         if: matrix.ha-version == 'latest'
-        run: python3 -m pip install -U homeassistant
+        run: python3 -m pip install -U homeassistant pytest-homeassistant-custom-component
 
       - name: Report Home Assistant version
         run: |
