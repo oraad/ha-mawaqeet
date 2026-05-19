@@ -7,6 +7,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import selector
 
 from .const import (
     DOMAIN,
@@ -23,7 +24,9 @@ CONF_TRIGGER_TYPE = "trigger_type"
 
 SERVICE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_CONFIG_ENTRY): cv.config_entry_id,
+        vol.Required(CONF_CONFIG_ENTRY): selector.ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
         vol.Required(CONF_TRIGGER_TYPE): vol.In(
             (PRAYER_TIME_TRIGGER, PRAYER_REMINDER_TRIGGER)
         ),
