@@ -28,9 +28,7 @@ def _entry_data() -> dict:
     }
 
 
-def _event_entity_id(
-    hass: HomeAssistant, entry_id: str, suffix: str
-) -> str:
+def _event_entity_id(hass: HomeAssistant, entry_id: str, suffix: str) -> str:
     registry = er.async_get(hass)
     entity = next(
         e
