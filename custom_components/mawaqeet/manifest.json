@@ -5,10 +5,13 @@
     "@oraad"
   ],
   "config_flow": true,
+  "dependencies": [
+    "http"
+  ],
   "documentation": "https://github.com/oraad/ha-mawaqeet",
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/oraad/ha-mawaqeet/issues",
-  "quality_scale": "bronze",
+  "quality_scale": "gold",
   "requirements": [
     "adhanpy==1.0.5"
   ],

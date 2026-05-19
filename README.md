@@ -132,6 +132,14 @@ data:
 
 Prayer times are calculated locally (no cloud API). The coordinator refreshes at each prayer boundary and schedules the next update, so entities stay in sync without constant polling. Changing options or reconfiguring reloads the entry and rebuilds timers.
 
+### Known limitations
+
+- Prayer times are **calculated locally** from coordinates and method settings; there is no link to a specific mosque timetable or cloud API.
+- **Shuruq**, **Midnight**, and **Last Third** are optional sensors; automations for the five daily prayers use Fajr through Ishaa.
+- **Reminder** events cover Fajr through Ishaa only (not Shuruq, Midnight, or Last Third).
+- Only **one config entry** per map position is allowed.
+- The custom Lovelace card requires adding a [Lovelace resource](#dashboard-cards) (served by the integration).
+
 ### Troubleshooting
 
 | Symptom | Things to check |
@@ -213,6 +221,8 @@ python scripts/generate_brand.py
 - Home Assistant **2026.3.2** or newer
 
 ## Development
+
+This integration targets the Home Assistant [integration quality scale](https://developers.home-assistant.io/docs/core/integration-quality-scale/) at **Gold** (Silver test coverage in CI; Platinum deferred).
 
 ```bash
 scripts/setup

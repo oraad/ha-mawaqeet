@@ -7,7 +7,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.mawaqeet.const import CALCULATION_METHOD, DOMAIN, MADHAB
+from custom_components.mawaqeet.const import (
+    CALCULATION_METHOD,
+    DOMAIN,
+    FAJR_ANGLE,
+    ISHAA_ANGLE,
+    ISHAA_INTERVAL,
+    MADHAB,
+)
+from custom_components.mawaqeet.enum import CalculationMethod
 
 
 def _location_unique_id(latitude: float, longitude: float) -> str:
@@ -111,6 +119,37 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
     assert entry.unique_id == _location_unique_id(
         new_location[CONF_LATITUDE], new_location[CONF_LONGITUDE]
     )
+
+
+async def test_custom_calculation_adjustment(hass: HomeAssistant) -> None:
+    """Test custom calculation method shows angle fields in adjustment step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_NAME: "Custom",
+            CONF_LOCATION: {CONF_LATITUDE: 51.5, CONF_LONGITUDE: -0.12},
+            CALCULATION_METHOD: str(CalculationMethod.CUSTOM),
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "adjustment"
+    assert FAJR_ANGLE in result["data_schema"].schema
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            MADHAB: "shafi",
+            FAJR_ANGLE: 18.0,
+            ISHAA_ANGLE: 17.0,
+            ISHAA_INTERVAL: 0,
+        },
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    entry = hass.config_entries.async_entries(DOMAIN)[-1]
+    assert entry.options[FAJR_ANGLE] == 18.0
 
 
 async def test_options_flow_reload(hass: HomeAssistant) -> None:

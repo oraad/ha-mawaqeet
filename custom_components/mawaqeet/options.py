@@ -2,10 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from .const import DEFAULT_REMINDER_MINUTES, REMINDER_MINUTES
-from .enum import REMINDER_SCHEDULE_PRAYERS, prayer_reminder_minutes_key
+from .const import CALCULATION_METHOD, DEFAULT_REMINDER_MINUTES, REMINDER_MINUTES
+from .enum import (
+    REMINDER_SCHEDULE_PRAYERS,
+    CalculationMethod,
+    prayer_reminder_minutes_key,
+)
+
+if TYPE_CHECKING:
+    from .data import MawaqeetConfigEntry
+
+
+def get_calculation_method(config_entry: MawaqeetConfigEntry) -> str:
+    """Return the calculation method id from config entry data."""
+    return config_entry.data.get(
+        CALCULATION_METHOD, str(CalculationMethod.MUSLIM_WORLD_LEAGUE)
+    )
 
 
 def migrate_options(options: dict[str, Any]) -> dict[str, Any]:

@@ -47,6 +47,9 @@ jobs:
       - name: Install test requirements
         run: python3 -m pip install -r requirements-test.txt
 
+      - name: Install pytest-cov
+        run: python3 -m pip install pytest-cov
+
       - name: Upgrade Home Assistant and test plugin to latest
         if: matrix.ha-version == 'latest'
         run: python3 -m pip install -U homeassistant pytest-homeassistant-custom-component
@@ -58,4 +61,8 @@ jobs:
           python3 -c "from homeassistant.const import __version__; print('Installed:', __version__)"
 
       - name: Run tests
-        run: python3 -m pytest tests/ -v
+        run: |
+          python3 -m pytest tests/ -v \
+            --cov=custom_components/mawaqeet \
+            --cov-report=term-missing \
+            --cov-fail-under=95
