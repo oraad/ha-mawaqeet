@@ -1,0 +1,32 @@
+trigger_event:
+  name: Trigger prayer event
+  description: Fire a prayer time or reminder event immediately (for testing automations).
+  fields:
+    config_entry:
+      required: true
+      example: abc123def456
+      selector:
+        config_entry:
+          integration: mawaqeet
+    trigger_type:
+      required: true
+      example: prayer_time
+      selector:
+        select:
+          options:
+            - prayer_time
+            - prayer_reminder
+    prayer:
+      required: true
+      example: fajr
+      selector:
+        select:
+          options:
+            - fajr
+            - shuruq
+            - dhuhr
+            - asr
+            - maghrib
+            - ishaa
+            - midnight
+            - last_third

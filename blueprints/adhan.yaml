@@ -1,6 +1,9 @@
 blueprint:
   name: Adhan
-  description: Mawaqeet Adhan
+  description: >-
+    Play adhan on prayer time via Home Assistant media players or Music Assistant.
+    Supports normal playback or announcement mode, with separate media for Fajr
+    vs other prayers (playback and announcement).
   domain: automation
   input:
     device_id:
@@ -10,6 +13,32 @@ blueprint:
         device:
           filter:
             integration: mawaqeet
+    playback_mode:
+      name: Playback mode
+      description: >-
+        Media playback plays the adhan normally. Announcement ducks or pauses
+        other audio on supported players (Home Assistant announce or Music Assistant).
+      default: media_playback
+      selector:
+        select:
+          options:
+            - label: Media playback
+              value: media_playback
+            - label: Announcement
+              value: announcement
+    player_backend:
+      name: Player backend
+      description: >-
+        Home Assistant uses media_player.play_media. Music Assistant requires
+        the Music Assistant integration and MA media player entities.
+      default: home_assistant
+      selector:
+        select:
+          options:
+            - label: Home Assistant
+              value: home_assistant
+            - label: Music Assistant
+              value: music_assistant
     enable_fajr:
       name: 'Enable: Fajr Adhan'
       default: true
@@ -36,15 +65,51 @@ blueprint:
       selector:
         boolean: {}
     media_adhan_fajr:
-      name: Fajr Adhan Media
-      description: Select media_player and adhan for fajr
+      name: Fajr adhan (playback)
+      description: Media player and adhan file for Fajr when using media playback mode.
       selector:
         media:
     media_adhan:
-      name: Adhan Media
-      description: Select media_player and adhan for all other prayers
+      name: Other prayers adhan (playback)
+      description: Media player and adhan for Dhuhr through Ishaa in media playback mode.
       selector:
         media:
+    media_announce_fajr:
+      name: Fajr adhan (announcement)
+      description: >-
+        Media player and adhan for Fajr in announcement mode. For Music Assistant,
+        prefer files in /config/www or http(s) URLs.
+      selector:
+        media:
+    media_announce_other:
+      name: Other prayers adhan (announcement)
+      description: >-
+        Media player and adhan for Dhuhr through Ishaa in announcement mode.
+        For Music Assistant, prefer files in /config/www or http(s) URLs.
+      selector:
+        media:
+    announce_volume_fajr:
+      name: Fajr announcement volume (Music Assistant)
+      description: >-
+        Optional forced volume (0–100) for Fajr announcements on Music Assistant.
+        Leave empty to use the player default.
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          mode: slider
+    announce_volume:
+      name: Other prayers announcement volume (Music Assistant)
+      description: >-
+        Optional forced volume (0–100) for other prayer announcements on Music Assistant.
+        Leave empty to use the player default.
+      selector:
+        number:
+          min: 0
+          max: 100
+          step: 1
+          mode: slider
 
 trigger:
   - platform: device
@@ -53,6 +118,8 @@ trigger:
     type: prayer_time
 
 variables:
+  playback_mode: !input playback_mode
+  player_backend: !input player_backend
   enable_fajr: !input enable_fajr
   enable_dhuhr: !input enable_dhuhr
   enable_asr: !input enable_asr
@@ -61,84 +128,146 @@ variables:
   current_prayer: "{{ trigger.event.data.prayer }}"
   media_adhan_fajr: !input media_adhan_fajr
   media_adhan: !input media_adhan
+  media_announce_fajr: !input media_announce_fajr
+  media_announce_other: !input media_announce_other
+  announce_volume_fajr: !input announce_volume_fajr
+  announce_volume: !input announce_volume
+  adhan_entity_id: >-
+    {% if playback_mode == 'announcement' %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_announce_fajr.entity_id }}
+      {% else %}
+        {{ media_announce_other.entity_id }}
+      {% endif %}
+    {% else %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_adhan_fajr.entity_id }}
+      {% else %}
+        {{ media_adhan.entity_id }}
+      {% endif %}
+    {% endif %}
+  adhan_media_content_id: >-
+    {% if playback_mode == 'announcement' %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_announce_fajr.media_content_id }}
+      {% else %}
+        {{ media_announce_other.media_content_id }}
+      {% endif %}
+    {% else %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_adhan_fajr.media_content_id }}
+      {% else %}
+        {{ media_adhan.media_content_id }}
+      {% endif %}
+    {% endif %}
+  adhan_media_content_type: >-
+    {% if playback_mode == 'announcement' %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_announce_fajr.media_content_type }}
+      {% else %}
+        {{ media_announce_other.media_content_type }}
+      {% endif %}
+    {% else %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_adhan_fajr.media_content_type }}
+      {% else %}
+        {{ media_adhan.media_content_type }}
+      {% endif %}
+    {% endif %}
+  announce_vol: >-
+    {% if playback_mode == 'announcement' %}
+      {% if current_prayer == 'fajr' %}
+        {{ announce_volume_fajr }}
+      {% else %}
+        {{ announce_volume }}
+      {% endif %}
+    {% endif %}
 
-condition: []
+condition:
+  - condition: template
+    value_template: >-
+      {% set p = trigger.event.data.prayer %}
+      {{ (p == 'fajr' and enable_fajr) or (p == 'dhuhr' and enable_dhuhr) or
+         (p == 'asr' and enable_asr) or (p == 'maghrib' and enable_maghrib) or
+         (p == 'ishaa' and enable_ishaa) }}
 
 action:
+  - event: adhan_event
+    event_data:
+      prayer: "{{ current_prayer }}"
   - choose:
       - conditions:
-          - '{{current_prayer == "fajr"}}'
-          - '{{enable_fajr}}'
+          - condition: template
+            value_template: >-
+              {{ player_backend == 'home_assistant' and playback_mode == 'media_playback' }}
         sequence:
-          - event: adhan_event
-            event_data:
-              prayer: fajr
-          - service: media_player.play_media
+          - action: media_player.play_media
             target:
-              entity_id: "{{ media_adhan_fajr.entity_id }}"
+              entity_id: "{{ adhan_entity_id }}"
             data:
-              media_content_id: "{{ media_adhan_fajr.media_content_id }}"
-              media_content_type: "{{ media_adhan_fajr.media_content_type }}"
-            metadata: {}
-
+              media_content_id: "{{ adhan_media_content_id }}"
+              media_content_type: "{{ adhan_media_content_type }}"
       - conditions:
-          - '{{current_prayer == "dhuhr"}}'
-          - '{{enable_dhuhr}}'
+          - condition: template
+            value_template: >-
+              {{ player_backend == 'home_assistant' and playback_mode == 'announcement' }}
         sequence:
-          - event: adhan_event
-            event_data:
-              prayer: dhuhr
-          - service: media_player.play_media
+          - action: media_player.play_media
             target:
-              entity_id: "{{ media_adhan.entity_id }}"
+              entity_id: "{{ adhan_entity_id }}"
             data:
-              media_content_id: "{{ media_adhan.media_content_id }}"
-              media_content_type: "{{ media_adhan.media_content_type }}"
-            metadata: {}
-
+              media_content_id: "{{ adhan_media_content_id }}"
+              media_content_type: "{{ adhan_media_content_type }}"
+              announce: true
       - conditions:
-          - '{{current_prayer == "asr"}}'
-          - '{{enable_asr}}'
+          - condition: template
+            value_template: >-
+              {{ player_backend == 'music_assistant' and playback_mode == 'media_playback' }}
         sequence:
-          - event: adhan_event
-            event_data:
-              prayer: asr
-          - service: media_player.play_media
+          - action: music_assistant.play_media
             target:
-              entity_id: "{{ media_adhan.entity_id }}"
+              entity_id: "{{ adhan_entity_id }}"
             data:
-              media_content_id: "{{ media_adhan.media_content_id }}"
-              media_content_type: "{{ media_adhan.media_content_type }}"
-            metadata: {}
-
+              media_id: "{{ adhan_media_content_id }}"
+              media_type: "{{ adhan_media_content_type }}"
+              enqueue: play
       - conditions:
-          - '{{current_prayer == "maghrib"}}'
-          - '{{enable_maghrib}}'
+          - condition: template
+            value_template: >-
+              {{ player_backend == 'music_assistant' and playback_mode == 'announcement' }}
         sequence:
-          - event: adhan_event
-            event_data:
-              prayer: maghrib
-          - service: media_player.play_media
-            target:
-              entity_id: "{{ media_adhan.entity_id }}"
+          - action: media_source.resolve_media
             data:
-              media_content_id: "{{ media_adhan.media_content_id }}"
-              media_content_type: "{{ media_adhan.media_content_type }}"
-            metadata: {}
-
-      - conditions:
-          - '{{current_prayer == "ishaa"}}'
-          - '{{enable_ishaa}}'
-        sequence:
-          - event: adhan_event
-            event_data:
-              prayer: ishaa
-          - service: media_player.play_media
-            target:
-              entity_id: "{{ media_adhan.entity_id }}"
-            data:
-              media_content_id: "{{ media_adhan.media_content_id }}"
-              media_content_type: "{{ media_adhan.media_content_type }}"
-            metadata: {}
+              media_content_id: "{{ adhan_media_content_id }}"
+              media_content_type: "{{ adhan_media_content_type }}"
+            response_variable: resolved_adhan
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ announce_vol is number }}"
+                sequence:
+                  - action: music_assistant.play_announcement
+                    target:
+                      entity_id: "{{ adhan_entity_id }}"
+                    data:
+                      url: >-
+                        {% if adhan_media_content_id is match('https?://.*') %}
+                          {{ adhan_media_content_id }}
+                        {% else %}
+                          {{ resolved_adhan.url }}
+                        {% endif %}
+                      announce_volume: "{{ announce_vol }}"
+              - conditions: []
+                sequence:
+                  - action: music_assistant.play_announcement
+                    target:
+                      entity_id: "{{ adhan_entity_id }}"
+                    data:
+                      url: >-
+                        {% if adhan_media_content_id is match('https?://.*') %}
+                          {{ adhan_media_content_id }}
+                        {% else %}
+                          {{ resolved_adhan.url }}
+                        {% endif %}
 
 mode: single

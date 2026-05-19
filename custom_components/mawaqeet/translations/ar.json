@@ -1,0 +1,278 @@
+{
+    "config": {
+        "flow_title": "مواقيت",
+        "step": {
+            "user": {
+                "title": "إعداد مواقيت",
+                "description": "للمساعدة في الإعداد راجع: https://github.com/oraad/ha-mawaqeet",
+                "data_description": {
+                    "name": "اسم هذا الموقع في Home Assistant.",
+                    "location": "الموقع على الخريطة لحساب أوقات الصلاة.",
+                    "calculation_method": "طريقة الحساب المناسبة لمنطقتك."
+                },
+                "data": {
+                    "name": "الاسم",
+                    "latitude": "خط العرض",
+                    "longitude": "خط الطول",
+                    "location": "الموقع",
+                    "calculation_method": "طريقة الحساب"
+                }
+            },
+            "adjustment": {
+                "title": "تعديلات الصلاة",
+                "data_description": {
+                    "madhab": "يؤثر على حساب العصر (شافعي أو حنفي).",
+                    "reminder_enabled": "إطلاق أحداث تذكير قبل كل صلاة.",
+                    "fajr_reminder_minutes": "دقائق قبل الفجر لإطلاق حدث التذكير.",
+                    "shuruq_reminder_minutes": "دقائق قبل الشروق لإطلاق حدث التذكير.",
+                    "dhuhr_reminder_minutes": "دقائق قبل الظهر لإطلاق حدث التذكير.",
+                    "asr_reminder_minutes": "دقائق قبل العصر لإطلاق حدث التذكير.",
+                    "maghrib_reminder_minutes": "دقائق قبل المغرب لإطلاق حدث التذكير.",
+                    "ishaa_reminder_minutes": "دقائق قبل العشاء لإطلاق حدث التذكير."
+                },
+                "data": {
+                    "madhab": "المذهب",
+                    "fajr_angle": "زاوية الفجر",
+                    "ishaa_angle": "زاوية العشاء",
+                    "ishaa_interval": "فترة العشاء",
+                    "high_latitude_rule": "قاعدة خطوط العرض العالية",
+                    "fajr": "تعديل الفجر (دقائق)",
+                    "shuruq": "تعديل الشروق (دقائق)",
+                    "dhuhr": "تعديل الظهر (دقائق)",
+                    "asr": "تعديل العصر (دقائق)",
+                    "maghrib": "تعديل المغرب (دقائق)",
+                    "ishaa": "تعديل العشاء (دقائق)",
+                    "reminder_enabled": "تذكيرات الصلاة",
+                    "fajr_reminder_minutes": "تذكير الفجر (دقائق قبل الأذان)",
+                    "shuruq_reminder_minutes": "تذكير الشروق (دقائق قبل)",
+                    "dhuhr_reminder_minutes": "تذكير الظهر (دقائق قبل الأذان)",
+                    "asr_reminder_minutes": "تذكير العصر (دقائق قبل الأذان)",
+                    "maghrib_reminder_minutes": "تذكير المغرب (دقائق قبل الأذان)",
+                    "ishaa_reminder_minutes": "تذكير العشاء (دقائق قبل الأذان)"
+                }
+            },
+            "reconfigure": {
+                "title": "إعادة إعداد مواقيت",
+                "data_description": {
+                    "name": "اسم هذا الموقع في Home Assistant.",
+                    "location": "الموقع على الخريطة لحساب أوقات الصلاة.",
+                    "calculation_method": "طريقة الحساب المناسبة لمنطقتك."
+                },
+                "data": {
+                    "name": "الاسم",
+                    "location": "الموقع",
+                    "calculation_method": "طريقة الحساب"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "هذا الموقع مُعدّ مسبقاً",
+            "reconfigure_successful": "تم تحديث الإعداد بنجاح"
+        },
+        "error": {}
+    },
+    "options": {
+        "flow_title": "خيارات مواقيت",
+        "step": {
+            "adjustment": {
+                "title": "تعديلات الصلاة",
+                "data_description": {
+                    "madhab": "يؤثر على حساب العصر (شافعي أو حنفي).",
+                    "reminder_enabled": "إطلاق أحداث تذكير قبل كل صلاة.",
+                    "fajr_reminder_minutes": "دقائق قبل الفجر لإطلاق حدث التذكير.",
+                    "shuruq_reminder_minutes": "دقائق قبل الشروق لإطلاق حدث التذكير.",
+                    "dhuhr_reminder_minutes": "دقائق قبل الظهر لإطلاق حدث التذكير.",
+                    "asr_reminder_minutes": "دقائق قبل العصر لإطلاق حدث التذكير.",
+                    "maghrib_reminder_minutes": "دقائق قبل المغرب لإطلاق حدث التذكير.",
+                    "ishaa_reminder_minutes": "دقائق قبل العشاء لإطلاق حدث التذكير."
+                },
+                "data": {
+                    "madhab": "المذهب",
+                    "fajr_angle": "زاوية الفجر",
+                    "ishaa_angle": "زاوية العشاء",
+                    "ishaa_interval": "فترة العشاء",
+                    "high_latitude_rule": "قاعدة خطوط العرض العالية",
+                    "reminder_enabled": "تذكيرات الصلاة",
+                    "fajr_reminder_minutes": "تذكير الفجر (دقائق قبل الأذان)",
+                    "shuruq_reminder_minutes": "تذكير الشروق (دقائق قبل)",
+                    "dhuhr_reminder_minutes": "تذكير الظهر (دقائق قبل الأذان)",
+                    "asr_reminder_minutes": "تذكير العصر (دقائق قبل الأذان)",
+                    "maghrib_reminder_minutes": "تذكير المغرب (دقائق قبل الأذان)",
+                    "ishaa_reminder_minutes": "تذكير العشاء (دقائق قبل الأذان)",
+                    "fajr": "تعديل الفجر (دقائق)",
+                    "shuruq": "تعديل الشروق (دقائق)",
+                    "dhuhr": "تعديل الظهر (دقائق)",
+                    "asr": "تعديل العصر (دقائق)",
+                    "maghrib": "تعديل المغرب (دقائق)",
+                    "ishaa": "تعديل العشاء (دقائق)"
+                }
+            }
+        }
+    },
+    "selector": {
+        "calculation_method": {
+            "options": {
+                "mwl": "رابطة العالم الإسلامي",
+                "egyptian": "مصر",
+                "karachi": "كراتشي",
+                "umm_al_qura": "أم القرى",
+                "dubai": "دبي",
+                "msc": "لجنة رؤية الهلال",
+                "isna": "الجمعية الإسلامية لأمريكا الشمالية",
+                "kuwait": "الكويت",
+                "qatar": "قطر",
+                "singapore": "سنغافورة",
+                "uoif": "اتحاد المنظمات الإسلامية في فرنسا",
+                "custom": "مخصص"
+            }
+        },
+        "madhab": {
+            "options": {
+                "hanafi": "حنفي",
+                "shafi": "شافعي"
+            }
+        },
+        "high_latitude_rule": {
+            "options": {
+                "middle_of_the_night": "منتصف الليل",
+                "seventh_of_the_night": "سُبع الليل",
+                "twilight_angle": "زاوية الشفق"
+            }
+        }
+    },
+    "entity": {
+        "sensor": {
+            "fajr": {
+                "name": "الفجر"
+            },
+            "shuruq": {
+                "name": "الشروق"
+            },
+            "dhuhr": {
+                "name": "الظهر"
+            },
+            "asr": {
+                "name": "العصر"
+            },
+            "maghrib": {
+                "name": "المغرب"
+            },
+            "ishaa": {
+                "name": "العشاء"
+            },
+            "midnight": {
+                "name": "منتصف الليل"
+            },
+            "last_third": {
+                "name": "الثلث الأخير"
+            },
+            "fajr_angle": {
+                "name": "زاوية الفجر"
+            },
+            "ishaa_angle": {
+                "name": "زاوية العشاء"
+            },
+            "ishaa_interval": {
+                "name": "فترة العشاء"
+            },
+            "night_length": {
+                "name": "طول الليل (حتى الشروق)"
+            },
+            "night_duration": {
+                "name": "مدة الليل (حتى الفجر)"
+            },
+            "fajr_offset": {
+                "name": "تعديل الفجر"
+            },
+            "shuruq_offset": {
+                "name": "تعديل الشروق"
+            },
+            "dhuhr_offset": {
+                "name": "تعديل الظهر"
+            },
+            "asr_offset": {
+                "name": "تعديل العصر"
+            },
+            "maghrib_offset": {
+                "name": "تعديل المغرب"
+            },
+            "ishaa_offset": {
+                "name": "تعديل العشاء"
+            },
+            "calculation_method": {
+                "name": "طريقة الحساب",
+                "state": {
+                    "mwl": "رابطة العالم الإسلامي",
+                    "egyptian": "مصر",
+                    "karachi": "كراتشي",
+                    "umm_al_qura": "أم القرى",
+                    "dubai": "دبي",
+                    "msc": "لجنة رؤية الهلال",
+                    "isna": "الجمعية الإسلامية لأمريكا الشمالية",
+                    "kuwait": "الكويت",
+                    "qatar": "قطر",
+                    "singapore": "سنغافورة",
+                    "uoif": "اتحاد المنظمات الإسلامية في فرنسا",
+                    "custom": "مخصص"
+                }
+            },
+            "high_latitude_rule": {
+                "name": "قاعدة خطوط العرض العالية",
+                "state": {
+                    "middle_of_the_night": "منتصف الليل",
+                    "seventh_of_the_night": "سُبع الليل",
+                    "twilight_angle": "زاوية الشفق"
+                }
+            },
+            "madhab": {
+                "name": "المذهب",
+                "state": {
+                    "hanafi": "حنفي",
+                    "shafi": "شافعي"
+                }
+            }
+        },
+        "event": {
+            "latest_prayer_time": {
+                "name": "آخر وقت صلاة",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "fajr": "الفجر",
+                            "shuruq": "الشروق",
+                            "dhuhr": "الظهر",
+                            "asr": "العصر",
+                            "maghrib": "المغرب",
+                            "ishaa": "العشاء",
+                            "midnight": "منتصف الليل",
+                            "last_third": "الثلث الأخير"
+                        }
+                    }
+                }
+            },
+            "latest_prayer_reminder": {
+                "name": "آخر تذكير صلاة",
+                "state_attributes": {
+                    "event_type": {
+                        "state": {
+                            "fajr": "الفجر",
+                            "shuruq": "الشروق",
+                            "dhuhr": "الظهر",
+                            "asr": "العصر",
+                            "maghrib": "المغرب",
+                            "ishaa": "العشاء",
+                            "midnight": "منتصف الليل",
+                            "last_third": "الثلث الأخير"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "prayer_time": "عند وقت الصلاة",
+            "prayer_reminder": "عند تذكير الصلاة"
+        }
+    }
+}

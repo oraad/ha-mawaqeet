@@ -1,18 +1,39 @@
-# artifacts
-__pycache__
-.pytest*
-*.egg-info
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest*/
+*.egg-info/
 */build/*
 */dist/*
+.mypy_cache/
+.hypothesis/
+htmlcov/
 
-
-# misc
+# Tooling / coverage
 .coverage
-.vscode
 coverage.xml
-.ruff_cache
+.ruff_cache/
 
+# Virtual environments and secrets
+.venv/
+venv/
+env/
+.env
+.env.*
 
-# Home Assistant configuration
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Git tooling
+.git-rewrite/
+
+# Release artifacts
+*.zip
+
+# Home Assistant local config (keep configuration.yaml)
 config/*
 !config/configuration.yaml

@@ -16,7 +16,7 @@ Pull requests are the best way to propose changes to the codebase.
 1. Fork the repo and create your branch from `main`.
 2. If you've changed something, update the documentation.
 3. Make sure your code lints (using `scripts/lint`).
-4. Test you contribution.
+4. Test your contribution (see below).
 5. Issue that pull request!
 
 ## Any contributions you make will be under the MIT Software License
@@ -44,17 +44,26 @@ People *love* thorough bug reports. I'm not even kidding.
 
 ## Use a Consistent Coding Style
 
-Use [black](https://github.com/ambv/black) to make sure the code follows the style.
+Use [ruff](https://docs.astral.sh/ruff/) (`scripts/lint`) to make sure the code follows the style.
 
 ## Test your code modification
 
-This custom component is based on [integration_blueprint template](https://github.com/ludeeus/integration_blueprint).
+Run the test suite with Python **3.14** after `scripts/setup` (installs all dependencies from `requirements.txt`):
 
-It comes with development environment in a container, easy to launch
-if you use Visual Studio Code. With this container you will have a stand alone
-Home Assistant instance running and already configured with the included
-[`configuration.yaml`](./config/configuration.yaml)
-file.
+```bash
+scripts/test
+```
+
+- **Pinned Home Assistant** (default): uses `homeassistant==…` from [`requirements-test.txt`](requirements-test.txt), matching the supported release.
+- **Latest Home Assistant** (same as CI “latest” leg):
+
+```bash
+HA_TEST_LATEST=1 scripts/test
+```
+
+CI runs both on every push and pull request to `main` (see [`.github/workflows/test.yml`](.github/workflows/test.yml)).
+
+This custom component is based on [integration_blueprint](https://github.com/ludeeus/integration_blueprint). A dev container (`.devcontainer.json`) provides a standalone Home Assistant instance with [`config/configuration.yaml`](./config/configuration.yaml).
 
 ## License
 

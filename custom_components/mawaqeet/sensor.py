@@ -11,18 +11,17 @@ from homeassistant.components.sensor import (
 from homeassistant.components.sensor.const import SensorDeviceClass
 from homeassistant.const import EntityCategory
 
-from .const import DOMAIN
 from .entity import MawaqeetEntity
 from .enum import PrayerTime, PrayerTimeOption
 
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .coordinator import MawaqeetDataUpdateCoordinator
+    from .data import MawaqeetConfigEntry
 
 ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
@@ -100,10 +99,12 @@ ENTITY_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
+    _hass: HomeAssistant,
+    entry: MawaqeetConfigEntry,
+    async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator: MawaqeetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
     async_add_devices(
         MawaqeetSensor(
             coordinator=coordinator,
