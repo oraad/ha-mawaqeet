@@ -21,7 +21,7 @@ VIEWBOX_RE = re.compile(
     r'viewBox\s*=\s*["\']([\d.\-eE]+)\s+([\d.\-eE]+)\s+([\d.\-eE]+)\s+([\d.\-eE]+)["\']'
 )
 
-# (filename, svg, canvas_w, canvas_h, pad_px)
+# ProductionAsset fields: filename, svg path, canvas width/height, pad pixels.
 ProductionAsset = tuple[str, Path, int, int, int]
 
 PRODUCTION_ASSETS: list[ProductionAsset] = [

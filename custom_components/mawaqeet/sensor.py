@@ -58,11 +58,13 @@ ENTITY_DESCRIPTIONS = (
         key=PrayerTime.MIDNIGHT,
         translation_key=PrayerTime.MIDNIGHT,
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=PrayerTime.LAST_THIRD,
         translation_key=PrayerTime.LAST_THIRD,
         device_class=SensorDeviceClass.TIMESTAMP,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=PrayerTimeOption.CALCULATION_METHOD,
@@ -86,6 +88,7 @@ ENTITY_DESCRIPTIONS = (
         suggested_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key=PrayerTimeOption.NIGHT_DURATION,
@@ -94,6 +97,7 @@ ENTITY_DESCRIPTIONS = (
         suggested_unit_of_measurement="h",
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
 )
 

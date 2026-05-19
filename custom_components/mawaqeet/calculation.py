@@ -11,7 +11,6 @@ from adhanpy.PrayerTimes import (  # type: ignore[import-untyped]
     PrayerTimes,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
-from homeassistant.core import HomeAssistant
 
 from .const import FAJR_ANGLE, HIGH_LATITUDE_RULE, ISHAA_ANGLE, ISHAA_INTERVAL, MADHAB
 from .enum import (
@@ -28,11 +27,13 @@ from .mapper import (
     PrayerAdjustmentMapper,
     PrayerAdjustments,
 )
-from .models import Coordinates, MawaqeetData, PrayerTimeConfig, PrayerTimeEntries
 from .options import get_calculation_method
 
 if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant
+
     from .data import MawaqeetConfigEntry
+    from .models import Coordinates, MawaqeetData, PrayerTimeConfig, PrayerTimeEntries
 
 
 def _get_adjustments(config_entry: MawaqeetConfigEntry) -> Any:

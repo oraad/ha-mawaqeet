@@ -14,6 +14,7 @@ from custom_components.mawaqeet.const import (
     REMINDER_MINUTES,
 )
 from custom_components.mawaqeet.coordinator import MawaqeetDataUpdateCoordinator
+from custom_components.mawaqeet.data import MawaqeetRuntimeData
 from custom_components.mawaqeet.enum import PrayerTime, prayer_reminder_minutes_key
 
 
@@ -55,7 +56,8 @@ async def test_coordinator_refresh(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     coordinator = MawaqeetDataUpdateCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = MawaqeetRuntimeData(coordinator=coordinator)
+    await coordinator.async_refresh()
 
     assert coordinator.data is not None
     assert set(coordinator.data["prayer_times"].keys()) == set(PrayerTime)

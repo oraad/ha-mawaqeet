@@ -32,6 +32,7 @@ async def test_compute_prayer_times(hass: HomeAssistant) -> None:
     assert (
         sync_data["prayer_times_config"][PrayerTimeOption.CALCULATION_METHOD] == "mwl"
     )
-    assert async_data["prayer_times"][PrayerTime.FAJR] == sync_data["prayer_times"][
-        PrayerTime.FAJR
-    ]
+    assert (
+        async_data["prayer_times"][PrayerTime.FAJR]
+        == sync_data["prayer_times"][PrayerTime.FAJR]
+    )

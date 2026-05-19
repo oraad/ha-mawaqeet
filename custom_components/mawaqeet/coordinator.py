@@ -134,9 +134,7 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator[MawaqeetData]):
     async def _async_update_data(self) -> MawaqeetData:
         """Update data via library."""
         self.clear_event_sub()
-        mawaqeet_data = await async_compute_prayer_times(
-            self.hass, self.config_entry
-        )
+        mawaqeet_data = await async_compute_prayer_times(self.hass, self.config_entry)
 
         self.async_schedule_future_update(mawaqeet_data["prayer_times"])
         return mawaqeet_data

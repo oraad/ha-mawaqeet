@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 
-from .data import MawaqeetConfigEntry
 from .enum import REMINDER_SCHEDULE_PRAYERS
+
+if TYPE_CHECKING:
+    from .data import MawaqeetConfigEntry
 
 TO_REDACT = {
     CONF_LOCATION,

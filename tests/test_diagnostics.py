@@ -27,6 +27,6 @@ async def test_diagnostics_redacts_location(hass: HomeAssistant) -> None:
     result = await async_get_config_entry_diagnostics(hass, entry)
 
     assert result["entry_id"] == entry.entry_id
-    assert CONF_LOCATION not in result["data"]
+    assert result["data"][CONF_LOCATION] == "**REDACTED**"
     assert "fajr" in result["prayer_times"]
     assert result["options"][MADHAB] == "shafi"

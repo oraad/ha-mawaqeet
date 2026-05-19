@@ -36,9 +36,7 @@ async def test_setup_migrates_legacy_options(hass: HomeAssistant) -> None:
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     assert REMINDER_MINUTES not in entry.options
-    assert (
-        entry.options[prayer_reminder_minutes_key(PrayerTime.FAJR)] == 12
-    )
+    assert entry.options[prayer_reminder_minutes_key(PrayerTime.FAJR)] == 12
 
 
 async def test_setup_and_unload(hass: HomeAssistant) -> None:

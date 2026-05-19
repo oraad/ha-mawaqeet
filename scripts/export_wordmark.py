@@ -47,7 +47,7 @@ CONTENT_PAD = 6
 ICON_PAD = 12  # margin around trimmed icon viewBox (avoids raster clip)
 CRESCENT_BOUNDS_PAD = 3  # safety for arc/antialias outside mathematical bbox
 
-# Mark geometry bounds in 256×256 mark space (updated by _write_mark_svg).
+# Mark geometry bounds in 256x256 mark space (updated by _write_mark_svg).
 MARK_XMIN, MARK_XMAX = 52.0, 186.0
 MARK_YMIN, MARK_YMAX = 48.0, 194.0
 
@@ -75,7 +75,13 @@ def _write_mark_svg() -> str:
     # Minaret aligned in crescent opening
     plinth_x, plinth_y, plinth_w, plinth_h, plinth_rx = 150.0, 178.0, 26.0, 14.0, 4.0
     stem_x, stem_y, stem_w, stem_h, stem_rx = 157.0, 98.0, 12.0, 80.0, 2.5
-    balcony_x, balcony_y, balcony_w, balcony_h, balcony_rx = 148.0, 132.0, 22.0, 8.0, 2.0
+    balcony_x, balcony_y, balcony_w, balcony_h, balcony_rx = (
+        148.0,
+        132.0,
+        22.0,
+        8.0,
+        2.0,
+    )
     cap_gap = 2.0
     cap_base_y = stem_y - cap_gap
     cap_apex = (163.0, 66.0)
@@ -234,7 +240,6 @@ def _shape_text(
     """Return path d, advance width, and bounds height/width in font units."""
     ttfont = TTFont(font_path)
     glyph_set = ttfont.getGlyphSet()
-    upem = ttfont["head"].unitsPerEm
 
     blob = hb.Blob.from_file_path(str(font_path))
     face = hb.Face(blob)
@@ -259,9 +264,7 @@ def _shape_text(
         ty = pos.y_offset
         transform = TransformPen(pen, (1, 0, 0, 1, tx, ty))
         glyph_set[glyph_name].draw(transform)
-        glyph_set[glyph_name].draw(
-            TransformPen(bounds_pen, (1, 0, 0, 1, tx, ty))
-        )
+        glyph_set[glyph_name].draw(TransformPen(bounds_pen, (1, 0, 0, 1, tx, ty)))
         width += pos.x_advance
 
     path_d = pen.getCommands()

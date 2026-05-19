@@ -76,7 +76,7 @@ async def test_attach_trigger_fires(hass: HomeAssistant) -> None:
 
     fired = asyncio.Event()
 
-    async def action() -> None:
+    async def action(_variables: dict | None = None) -> None:
         fired.set()
 
     trigger_config = {
@@ -94,6 +94,8 @@ async def test_attach_trigger_fires(hass: HomeAssistant) -> None:
             domain=DOMAIN,
             name="test",
             platform="device",
+            home_assistant_start=False,
+            variables=None,
             trigger_data={},
         ),
     )
