@@ -1,0 +1,129 @@
+blueprint:
+  name: Fajr wake-up
+  description: >-
+    Gradually turn on bedroom lights and optionally play a soft tone at Fajr or
+    at the Mawaqeet Fajr reminder (lead time is set in Mawaqeet options). For
+    full adhan use the adhan blueprint instead. Test with mawaqeet.trigger_event.
+  domain: automation
+  input:
+    device_id:
+      name: Location
+      description: Select Mawaqeet device
+      selector:
+        device:
+          filter:
+            integration: mawaqeet
+    trigger_mode:
+      name: When to run
+      description: >-
+        Prayer time runs at Fajr. Prayer reminder runs using your Fajr reminder
+        minutes setting in Mawaqeet options.
+      default: prayer_reminder
+      selector:
+        select:
+          options:
+            - label: At Fajr prayer time
+              value: prayer_time
+            - label: At Fajr reminder (before Fajr)
+              value: prayer_reminder
+    target_lights:
+      name: Wake-up lights
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: light
+    brightness:
+      name: Target brightness
+      default: 80
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    transition:
+      name: Light transition
+      description: Seconds to fade lights to target brightness.
+      default: 60
+      selector:
+        number:
+          min: 0
+          max: 1800
+          step: 1
+          unit_of_measurement: seconds
+    optional_media:
+      name: Optional wake tone
+      description: >-
+        Optional soft tone on a media player. Leave empty for lights only.
+      selector:
+        media:
+    only_if_home:
+      name: Only when someone is home
+      default: false
+      selector:
+        boolean: {}
+    people:
+      name: People
+      description: Used when only when someone is home is enabled.
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: person
+
+trigger:
+  - platform: device
+    domain: mawaqeet
+    device_id: !input device_id
+    type: prayer_time
+  - platform: device
+    domain: mawaqeet
+    device_id: !input device_id
+    type: prayer_reminder
+
+variables:
+  trigger_mode: !input trigger_mode
+  target_lights: !input target_lights
+  brightness: !input brightness
+  transition: !input transition
+  optional_media: !input optional_media
+  only_if_home: !input only_if_home
+  people: !input people
+  event_type: "{{ trigger.event.data.type }}"
+  has_media: >-
+    {{ optional_media is mapping and optional_media.entity_id is defined and
+       optional_media.media_content_id is defined }}
+
+condition:
+  - condition: template
+    value_template: "{{ trigger.event.data.prayer == 'fajr' }}"
+  - condition: template
+    value_template: "{{ trigger.event.data.type == trigger_mode }}"
+  - condition: template
+    value_template: "{{ target_lights | length > 0 }}"
+  - condition: template
+    value_template: >-
+      {{ not only_if_home or expand(people) | selectattr('state', 'eq', 'home')
+         | list | count > 0 }}
+
+action:
+  - action: light.turn_on
+    target:
+      entity_id: "{{ target_lights }}"
+    data:
+      brightness_pct: "{{ brightness }}"
+      transition: "{{ transition }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ has_media }}"
+        sequence:
+          - action: media_player.play_media
+            target:
+              entity_id: "{{ optional_media.entity_id }}"
+            data:
+              media_content_id: "{{ optional_media.media_content_id }}"
+              media_content_type: "{{ optional_media.media_content_type }}"
+
+mode: single

@@ -1,0 +1,169 @@
+blueprint:
+  name: Prayer time lighting
+  description: >-
+    Control lights or scenes when a Mawaqeet prayer time occurs. Complements the
+    adhan blueprint (audio). Shuruq, midnight, and last third can be enabled
+    separately. Test with mawaqeet.trigger_event (trigger_type prayer_time).
+  domain: automation
+  input:
+    device_id:
+      name: Location
+      description: Select Mawaqeet device
+      selector:
+        device:
+          filter:
+            integration: mawaqeet
+    action_mode:
+      name: Action
+      default: turn_on
+      selector:
+        select:
+          options:
+            - label: Turn on lights
+              value: turn_on
+            - label: Turn off lights
+              value: turn_off
+            - label: Activate scene
+              value: scene
+    target_lights:
+      name: Lights
+      description: Lights to control when action is turn on or turn off.
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: light
+    target_scene:
+      name: Scene
+      description: Scene to activate when action is Activate scene.
+      selector:
+        entity:
+          filter:
+            - domain: scene
+    brightness:
+      name: Brightness
+      description: Brightness percentage when turning lights on (1–100).
+      default: 100
+      selector:
+        number:
+          min: 1
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    transition:
+      name: Transition
+      description: Fade duration in seconds when turning lights on or off.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 300
+          step: 1
+          unit_of_measurement: seconds
+    enable_fajr:
+      name: 'Enable: Fajr'
+      default: true
+      selector:
+        boolean: {}
+    enable_shuruq:
+      name: 'Enable: Shuruq'
+      default: false
+      selector:
+        boolean: {}
+    enable_dhuhr:
+      name: 'Enable: Dhuhr'
+      default: true
+      selector:
+        boolean: {}
+    enable_asr:
+      name: 'Enable: Asr'
+      default: true
+      selector:
+        boolean: {}
+    enable_maghrib:
+      name: 'Enable: Maghrib'
+      default: true
+      selector:
+        boolean: {}
+    enable_ishaa:
+      name: 'Enable: Ishaa'
+      default: true
+      selector:
+        boolean: {}
+    enable_midnight:
+      name: 'Enable: Midnight'
+      default: false
+      selector:
+        boolean: {}
+    enable_last_third:
+      name: 'Enable: Last third of night'
+      default: false
+      selector:
+        boolean: {}
+
+trigger:
+  - platform: device
+    domain: mawaqeet
+    device_id: !input device_id
+    type: prayer_time
+
+variables:
+  action_mode: !input action_mode
+  target_lights: !input target_lights
+  target_scene: !input target_scene
+  brightness: !input brightness
+  transition: !input transition
+  enable_fajr: !input enable_fajr
+  enable_shuruq: !input enable_shuruq
+  enable_dhuhr: !input enable_dhuhr
+  enable_asr: !input enable_asr
+  enable_maghrib: !input enable_maghrib
+  enable_ishaa: !input enable_ishaa
+  enable_midnight: !input enable_midnight
+  enable_last_third: !input enable_last_third
+  current_prayer: "{{ trigger.event.data.prayer }}"
+
+condition:
+  - condition: template
+    value_template: >-
+      {% set p = trigger.event.data.prayer %}
+      {{ (p == 'fajr' and enable_fajr) or (p == 'shuruq' and enable_shuruq) or
+         (p == 'dhuhr' and enable_dhuhr) or (p == 'asr' and enable_asr) or
+         (p == 'maghrib' and enable_maghrib) or (p == 'ishaa' and enable_ishaa) or
+         (p == 'midnight' and enable_midnight) or
+         (p == 'last_third' and enable_last_third) }}
+  - condition: template
+    value_template: >-
+      {{ (action_mode in ['turn_on', 'turn_off'] and target_lights | length > 0) or
+         (action_mode == 'scene' and target_scene) }}
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ action_mode == 'turn_on' }}"
+        sequence:
+          - action: light.turn_on
+            target:
+              entity_id: "{{ target_lights }}"
+            data:
+              brightness_pct: "{{ brightness }}"
+              transition: "{{ transition }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ action_mode == 'turn_off' }}"
+        sequence:
+          - action: light.turn_off
+            target:
+              entity_id: "{{ target_lights }}"
+            data:
+              transition: "{{ transition }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ action_mode == 'scene' }}"
+        sequence:
+          - action: scene.turn_on
+            target:
+              entity_id: "{{ target_scene }}"
+
+mode: single

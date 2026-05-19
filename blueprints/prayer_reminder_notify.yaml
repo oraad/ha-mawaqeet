@@ -1,0 +1,131 @@
+blueprint:
+  name: Prayer reminder notification
+  description: >-
+    Send a notification or TTS message when Mawaqeet fires a prayer reminder.
+    Configure per-prayer lead times in Mawaqeet options. Test with the
+    mawaqeet.trigger_event service (trigger_type prayer_reminder).
+  domain: automation
+  input:
+    device_id:
+      name: Location
+      description: Select Mawaqeet device
+      selector:
+        device:
+          filter:
+            integration: mawaqeet
+    delivery_mode:
+      name: Delivery mode
+      default: notify
+      selector:
+        select:
+          options:
+            - label: Notify
+              value: notify
+            - label: Text to speech
+              value: tts
+    notify_service:
+      name: Notify service
+      description: >-
+        Service name, for example notify.mobile_app_my_phone. Used when delivery
+        mode is Notify.
+      default: notify.notify
+      selector:
+        text:
+    tts_entity:
+      name: TTS media player
+      description: Media player for TTS when delivery mode is Text to speech.
+      selector:
+        entity:
+          filter:
+            - domain: media_player
+    notification_title:
+      name: Notification title
+      default: Prayer reminder
+      selector:
+        text:
+    message_template:
+      name: Message
+      description: >-
+        Use {{ prayer }} for the prayer name (fajr, dhuhr, and so on). Lead
+        minutes are set in Mawaqeet options, not in this message.
+      default: "{{ prayer | replace('_', ' ') | title }} is coming soon."
+      selector:
+        text:
+    enable_fajr:
+      name: 'Enable: Fajr'
+      default: true
+      selector:
+        boolean: {}
+    enable_shuruq:
+      name: 'Enable: Shuruq'
+      default: false
+      selector:
+        boolean: {}
+    enable_dhuhr:
+      name: 'Enable: Dhuhr'
+      default: true
+      selector:
+        boolean: {}
+    enable_asr:
+      name: 'Enable: Asr'
+      default: true
+      selector:
+        boolean: {}
+    enable_maghrib:
+      name: 'Enable: Maghrib'
+      default: true
+      selector:
+        boolean: {}
+    enable_ishaa:
+      name: 'Enable: Ishaa'
+      default: true
+      selector:
+        boolean: {}
+
+trigger:
+  - platform: device
+    domain: mawaqeet
+    device_id: !input device_id
+    type: prayer_reminder
+
+variables:
+  delivery_mode: !input delivery_mode
+  notify_service: !input notify_service
+  tts_entity: !input tts_entity
+  enable_fajr: !input enable_fajr
+  enable_shuruq: !input enable_shuruq
+  enable_dhuhr: !input enable_dhuhr
+  enable_asr: !input enable_asr
+  enable_maghrib: !input enable_maghrib
+  enable_ishaa: !input enable_ishaa
+  prayer: "{{ trigger.event.data.prayer }}"
+
+condition:
+  - condition: template
+    value_template: >-
+      {% set p = trigger.event.data.prayer %}
+      {{ (p == 'fajr' and enable_fajr) or (p == 'shuruq' and enable_shuruq) or
+         (p == 'dhuhr' and enable_dhuhr) or (p == 'asr' and enable_asr) or
+         (p == 'maghrib' and enable_maghrib) or (p == 'ishaa' and enable_ishaa) }}
+
+action:
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ delivery_mode == 'notify' }}"
+        sequence:
+          - action: "{{ notify_service }}"
+            data:
+              title: !input notification_title
+              message: !input message_template
+      - conditions:
+          - condition: template
+            value_template: "{{ delivery_mode == 'tts' }}"
+        sequence:
+          - action: tts.speak
+            target:
+              entity_id: "{{ tts_entity }}"
+            data:
+              message: !input message_template
+
+mode: single
