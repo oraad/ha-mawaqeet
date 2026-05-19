@@ -20,6 +20,7 @@ from .service import async_setup_services
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
+    from homeassistant.helpers.typing import ConfigType
 
     from .data import MawaqeetConfigEntry
 
@@ -33,7 +34,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup(hass: HomeAssistant) -> bool:
+async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
     """Set up the Mawaqeet integration."""
     async_setup_services(hass)
     return True
