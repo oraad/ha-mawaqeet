@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="35.65 34.30 184.70 184.70" role="img" aria-label="Mawaqeet">
+  <g color="#D4AF5F">
+  <g id="mawaqeet-mark">
+    <defs>
+      <clipPath id="mawaqeet-crescent-clip">
+        <path fill-rule="evenodd" d="M 128.00 52.00 A 76.00 76.00 0 1 1 128.00 204.00 A 76.00 76.00 0 1 1 128.00 52.00 M 156.00 68.00 A 60.00 60.00 0 1 0 156.00 188.00 A 60.00 60.00 0 1 0 156.00 68.00 Z" />
+      </clipPath>
+    </defs>
+    <path fill="currentColor" fill-rule="evenodd" d="M 128.00 52.00 A 76.00 76.00 0 1 1 128.00 204.00 A 76.00 76.00 0 1 1 128.00 52.00 M 156.00 68.00 A 60.00 60.00 0 1 0 156.00 188.00 A 60.00 60.00 0 1 0 156.00 68.00 Z" />
+    <circle
+      cx="156.00"
+      cy="128.00"
+      r="60.00"
+      fill="currentColor"
+      fill-opacity="0.45"
+      clip-path="url(#mawaqeet-crescent-clip)"
+    />
+    <rect
+      x="150.00"
+      y="178.00"
+      width="26.00"
+      height="14.00"
+      rx="4.00"
+      fill="currentColor"
+    />
+    <rect
+      x="157.00"
+      y="98.00"
+      width="12.00"
+      height="80.00"
+      rx="2.50"
+      fill="currentColor"
+    />
+    <rect
+      x="148.00"
+      y="132.00"
+      width="22.00"
+      height="8.00"
+      rx="2.00"
+      fill="currentColor"
+      fill-opacity="0.85"
+    />
+    <path
+      fill="currentColor"
+      d="M 163.00 66.00 L 157.00 96.00 L 169.00 96.00 Z"
+    />
+    <path fill="currentColor" fill-opacity="0.75" d="M 182.00 47.00 L 183.96 52.04 L 189.00 54.00 L 183.96 55.96 L 182.00 61.00 L 180.04 55.96 L 175.00 54.00 L 180.04 52.04 Z" />
+  </g>
+  </g>
+</svg>

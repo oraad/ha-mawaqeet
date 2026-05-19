@@ -37,3 +37,6 @@ Thumbs.db
 # Home Assistant local config (keep configuration.yaml)
 config/*
 !config/configuration.yaml
+
+# Brand fonts (downloaded by scripts/export_wordmark.py)
+custom_components/mawaqeet/brand/src/fonts/*.ttf
