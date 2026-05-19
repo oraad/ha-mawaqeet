@@ -1,4 +1,4 @@
-"""Sensor platform for mawaqeet."""
+"""Event platform for mawaqeet."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE
 from homeassistant.core import Event, HomeAssistant, callback
 
 from .const import (
-    DOMAIN,
     LOGGER,
     MAWAQEET_EVENT,
     PRAYER,
@@ -24,10 +23,10 @@ from .entity import MawaqeetEntity
 from .enum import PrayerTime
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
     from .coordinator import MawaqeetDataUpdateCoordinator
+    from .data import MawaqeetConfigEntry
 
 LATEST_PRAYER_TIME = "latest_prayer_time"
 LATEST_PRAYER_REMINDER = "latest_prayer_reminder"
@@ -72,10 +71,12 @@ ENTITY_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_devices: AddEntitiesCallback
+    _hass: HomeAssistant,
+    entry: MawaqeetConfigEntry,
+    async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the event platform."""
-    coordinator: MawaqeetDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
     async_add_devices(
         MawaqeetEvent(
             coordinator=coordinator,
@@ -101,6 +102,7 @@ class MawaqeetEvent(MawaqeetEntity, EventEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        await super().async_added_to_hass()
 
         @callback
         def filter_event(event_data: MawaqeetEventData) -> bool:
@@ -109,19 +111,20 @@ class MawaqeetEvent(MawaqeetEntity, EventEntity):
                 self.entity_description.trigger_type,
                 event_data[CONF_DEVICE_ID],
                 event_data[CONF_TYPE],
-                event_data[CONF_DEVICE_ID] == self.coordinator.device.device_id
+                event_data[CONF_DEVICE_ID] == self.coordinator.device_id
                 and event_data[CONF_TYPE] == self.entity_description.trigger_type,
             )
             return (
-                event_data[CONF_DEVICE_ID] == self.coordinator.device.device_id
+                event_data[CONF_DEVICE_ID] == self.coordinator.device_id
                 and event_data[CONF_TYPE] == self.entity_description.trigger_type
             )
 
-        self.hass.bus.async_listen(
+        remove_listener = self.hass.bus.async_listen(
             MAWAQEET_EVENT,
             self._async_handle_event,
             event_filter=filter_event,
         )
+        self.async_on_remove(remove_listener)
 
     @callback
     def _async_handle_event(self, event: Event[MawaqeetEventData]) -> None:

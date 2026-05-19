@@ -16,6 +16,21 @@ class PrayerTime(StrEnum):
     LAST_THIRD = auto()
 
 
+REMINDER_SCHEDULE_PRAYERS: tuple[PrayerTime, ...] = (
+    PrayerTime.FAJR,
+    PrayerTime.SHURUQ,
+    PrayerTime.DHUHR,
+    PrayerTime.ASR,
+    PrayerTime.MAGHRIB,
+    PrayerTime.ISHAA,
+)
+
+
+def prayer_reminder_minutes_key(prayer: PrayerTime) -> str:
+    """Option key for reminder lead time before a prayer."""
+    return f"{prayer}_reminder_minutes"
+
+
 class PrayerTimeOption(StrEnum):
     """Prayer Time Options."""
 

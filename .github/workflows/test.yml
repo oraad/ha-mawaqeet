@@ -1,0 +1,61 @@
+name: Test
+
+on:
+  push:
+    branches:
+      - "main"
+      - "dev"
+  pull_request:
+    branches:
+      - "main"
+      - "dev"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  pytest:
+    name: Pytest (HA ${{ matrix.ha-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        ha-version: [pinned, latest]
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Read pinned Home Assistant version
+        id: ha_pin
+        run: |
+          version=$(grep '^homeassistant==' requirements-test.txt | cut -d= -f3)
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.14"
+          cache: "pip"
+          cache-dependency-path: |
+            requirements-dev.txt
+            requirements-test.txt
+
+      - name: Install test requirements
+        run: python3 -m pip install -r requirements-test.txt
+
+      - name: Upgrade Home Assistant and test plugin to latest
+        if: matrix.ha-version == 'latest'
+        run: python3 -m pip install -U homeassistant pytest-homeassistant-custom-component
+
+      - name: Report Home Assistant version
+        run: |
+          echo "Matrix leg: ${{ matrix.ha-version }}"
+          echo "Pinned in requirements-test.txt: ${{ steps.ha_pin.outputs.version }}"
+          python3 -c "from homeassistant.const import __version__; print('Installed:', __version__)"
+
+      - name: Run tests
+        run: python3 -m pytest tests/ -v

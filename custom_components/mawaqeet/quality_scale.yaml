@@ -1,0 +1,64 @@
+# Quality Scale for Mawaqeet
+# https://developers.home-assistant.io/docs/core/integration-quality-scale/
+
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-installation-parameters: done
+  docs-removal-instructions: done
+  entity-unique-id: done
+  entity-unavailable:
+    status: exempt
+    comment: Calculated prayer times are always available for a valid location.
+  has-entity-name: done
+  integration-owner: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: Prayer times are calculated locally; no external service to validate.
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  entity-event-setup: done
+  log-when-unavailable:
+    status: exempt
+    comment: No network device; prayer times are calculated locally.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: No credentials or external accounts.
+  reconfiguration-flow: done
+  test-coverage:
+    status: todo
+    comment: Add CI coverage reporting and reach 95% before claiming Silver in manifest.
+
+  # Gold (partial)
+  devices: done
+  docs-data-update: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  entity-translations: done
+  icon-translations: done
+
+  # Exempt — not applicable
+  discovery:
+    status: exempt
+    comment: Prayer times are calculated from location; no network discovery.
+  discovery-update-info:
+    status: exempt
+    comment: No discovery.
+  action-exceptions:
+    status: exempt
+    comment: trigger_event has no exception handling requirements.
+  docs-actions: done

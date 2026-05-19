@@ -6,8 +6,8 @@ LOGGER: Logger = getLogger(__package__)
 
 NAME = "Mawaqeet"
 DOMAIN = "mawaqeet"
-VERSION = "0.1.0"
 ATTRIBUTION = ""
+DOCUMENTATION_URL = "https://github.com/oraad/ha-mawaqeet"
 
 MAWAQEET_EVENT = "mawaqeet_event"
 PRAYER_TIME_TRIGGER = "prayer_time"
@@ -28,3 +28,6 @@ FAJR_ANGLE = "fajr_angle"
 ISHAA_ANGLE = "ishaa_angle"
 ISHAA_INTERVAL = "ishaa_interval"
 HIGH_LATITUDE_RULE = "high_latitude_rule"
+REMINDER_ENABLED = "reminder_enabled"
+REMINDER_MINUTES = "reminder_minutes"  # legacy global fallback
+DEFAULT_REMINDER_MINUTES = 15

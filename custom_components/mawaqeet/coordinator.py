@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import (
     CALCULATION_METHOD,
+    DEFAULT_REMINDER_MINUTES,
     DOMAIN,
     FAJR_ANGLE,
     HIGH_LATITUDE_RULE,
@@ -32,16 +33,20 @@ from .const import (
     LOGGER,
     MADHAB,
     MAWAQEET_EVENT,
+    PRAYER_REMINDER_TRIGGER,
     PRAYER_TIME_TRIGGER,
+    REMINDER_ENABLED,
+    REMINDER_MINUTES,
 )
-from .device_info import MawaqeetDeviceInfo
 from .enum import (
+    REMINDER_SCHEDULE_PRAYERS,
     CalculationMethod,
     HighLatitudeRule,
     Madhab,
     PrayerAdjustment,
     PrayerTime,
     PrayerTimeOption,
+    prayer_reminder_minutes_key,
 )
 from .mapper import (
     CalculationMethodMapper,
@@ -52,7 +57,7 @@ from .mapper import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
+    from .data import MawaqeetConfigEntry
 
 type NightTimes = tuple[timedelta, datetime, datetime]
 type PrayerTimeEntries = dict[PrayerTime, datetime]
@@ -71,32 +76,29 @@ class MawaqeetData(TypedDict):
 class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator[MawaqeetData]):
     """Class to manage fetching data from the API."""
 
-    _event_unsubs: list[CALLBACK_TYPE]
-    _device: MawaqeetDeviceInfo
+    config_entry: MawaqeetConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: MawaqeetConfigEntry) -> None:
         """Initialize."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
             name=DOMAIN,
+            config_entry=config_entry,
         )
-
-        self.config_entry = config_entry
-        self._device = MawaqeetDeviceInfo(
-            hass, self.config_entry, DeviceEntryType.SERVICE
-        )
-        self._event_unsubs = []
+        self._event_unsubs: list[CALLBACK_TYPE] = []
 
     @property
-    def device(self) -> MawaqeetDeviceInfo:
-        """Mawaqeet Device Info."""
-        return self._device
+    def device_id(self) -> str | None:
+        """Return the device registry id for this config entry."""
+        device_registry = dr.async_get(self.hass)
+        if device_entry := device_registry.async_get_device(
+            identifiers={(DOMAIN, self.config_entry.entry_id)}
+        ):
+            return device_entry.id
+        return None
 
     def __get_adjustments(self) -> AdhanPrayerAdjustments:
-        if self.config_entry is None:
-            return AdhanPrayerAdjustments()
-
         options = self.config_entry.options
         fajr_adj: int = options.get(str(PrayerAdjustment.FAJR), 0)
         shuruq_adj: int = options.get(str(PrayerAdjustment.SHURUQ), 0)
@@ -239,10 +241,22 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator[MawaqeetData]):
             "prayer_times_config": prayer_times_config,
         }
 
+    def _get_reminder_minutes(self, prayer: PrayerTime) -> int:
+        """Return reminder lead time in minutes for a prayer."""
+        options = self.config_entry.options
+        key = prayer_reminder_minutes_key(prayer)
+        if key in options:
+            return int(options[key])
+        if REMINDER_MINUTES in options:
+            return int(options[REMINDER_MINUTES])
+        return DEFAULT_REMINDER_MINUTES
+
     @callback
     def async_schedule_future_update(self, prayer_times: PrayerTimeEntries) -> None:
         """Schedule future update for sensors."""
         utc_now = dt_util.now()
+        options = self.config_entry.options
+        reminder_enabled = options.get(REMINDER_ENABLED, True)
 
         for prayer, prayer_dt in prayer_times.items():
             if prayer_dt > utc_now:
@@ -252,6 +266,19 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator[MawaqeetData]):
                     prayer_dt,
                 )
                 self._event_unsubs.append(event_unsub)
+
+                if reminder_enabled and prayer in REMINDER_SCHEDULE_PRAYERS:
+                    reminder_minutes = self._get_reminder_minutes(prayer)
+                    reminder_at = prayer_dt - timedelta(minutes=reminder_minutes)
+                    if reminder_at > utc_now:
+                        event_unsub = async_track_point_in_time(
+                            self.hass,
+                            self._async_fire_prayer_event(
+                                PRAYER_REMINDER_TRIGGER, str(prayer)
+                            ),
+                            reminder_at,
+                        )
+                        self._event_unsubs.append(event_unsub)
 
         next_update_at = prayer_times[PrayerTime.LAST_THIRD]
         event_unsub = async_track_point_in_time(
@@ -263,12 +290,24 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator[MawaqeetData]):
         """Request update from coordinator."""
         await self.async_request_refresh()
 
-    def _async_fire_prayer_event(self, trigger_type: str, prayer: str) -> Any:
-        event_data = {
-            "device_id": self._device.device_id,
+    def _prayer_event_data(self, trigger_type: str, prayer: str) -> dict[str, Any]:
+        """Build bus event payload for a prayer trigger."""
+        return {
+            "device_id": self.device_id,
             "type": trigger_type,
             "prayer": prayer,
         }
+
+    @callback
+    def fire_prayer_event_now(self, trigger_type: str, prayer: str) -> None:
+        """Fire a prayer time or reminder event immediately."""
+        self.hass.bus.async_fire(
+            MAWAQEET_EVENT,
+            self._prayer_event_data(trigger_type, prayer),
+        )
+
+    def _async_fire_prayer_event(self, trigger_type: str, prayer: str) -> Any:
+        event_data = self._prayer_event_data(trigger_type, prayer)
 
         async def fire_event(dt: datetime) -> None:
             self.hass.bus.async_fire(
@@ -279,6 +318,7 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator[MawaqeetData]):
 
     async def _async_update_data(self) -> MawaqeetData:
         """Update data via library."""
+        self.clear_event_sub()
         mawaqeet_data = await self.hass.async_add_executor_job(
             self.get_new_prayer_times_info
         )

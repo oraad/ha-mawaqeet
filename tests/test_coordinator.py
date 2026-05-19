@@ -1,0 +1,103 @@
+"""Test coordinator."""
+
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
+from homeassistant.core import HomeAssistant
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.mawaqeet.const import (
+    CALCULATION_METHOD,
+    DEFAULT_REMINDER_MINUTES,
+    DOMAIN,
+    MADHAB,
+    REMINDER_ENABLED,
+    REMINDER_MINUTES,
+)
+from custom_components.mawaqeet.coordinator import MawaqeetDataUpdateCoordinator
+from custom_components.mawaqeet.enum import PrayerTime, prayer_reminder_minutes_key
+
+
+async def test_prayer_times_computed(hass: HomeAssistant) -> None:
+    """Test prayer times are computed for a fixed location."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Home",
+            CONF_LOCATION: {CONF_LATITUDE: 51.5074, CONF_LONGITUDE: -0.1278},
+            CALCULATION_METHOD: "mwl",
+        },
+        options={
+            MADHAB: "shafi",
+            REMINDER_ENABLED: True,
+            prayer_reminder_minutes_key(PrayerTime.FAJR): 15,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = MawaqeetDataUpdateCoordinator(hass, entry)
+    data = coordinator.get_new_prayer_times_info()
+
+    assert set(data["prayer_times"].keys()) == set(PrayerTime)
+    for prayer_time in data["prayer_times"].values():
+        assert prayer_time is not None
+
+
+async def test_refresh_schedules_callbacks(hass: HomeAssistant) -> None:
+    """Test refresh clears and schedules event callbacks."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Home",
+            CONF_LOCATION: {CONF_LATITUDE: 51.5074, CONF_LONGITUDE: -0.1278},
+            CALCULATION_METHOD: "mwl",
+        },
+        options={MADHAB: "shafi", REMINDER_ENABLED: False},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    coordinator = entry.runtime_data.coordinator
+
+    assert coordinator.data is not None
+
+    coordinator.clear_event_sub()
+    coordinator.async_schedule_future_update(coordinator.data["prayer_times"])
+
+
+async def test_per_prayer_reminder_minutes(hass: HomeAssistant) -> None:
+    """Test per-prayer reminder minute resolution."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Home",
+            CONF_LOCATION: {CONF_LATITUDE: 51.5074, CONF_LONGITUDE: -0.1278},
+            CALCULATION_METHOD: "mwl",
+        },
+        options={
+            MADHAB: "shafi",
+            prayer_reminder_minutes_key(PrayerTime.FAJR): 10,
+            prayer_reminder_minutes_key(PrayerTime.DHUHR): 25,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = MawaqeetDataUpdateCoordinator(hass, entry)
+    assert coordinator._get_reminder_minutes(PrayerTime.FAJR) == 10
+    assert coordinator._get_reminder_minutes(PrayerTime.DHUHR) == 25
+    assert coordinator._get_reminder_minutes(PrayerTime.ASR) == DEFAULT_REMINDER_MINUTES
+
+
+async def test_legacy_reminder_minutes_fallback(hass: HomeAssistant) -> None:
+    """Test legacy global reminder_minutes is used as fallback."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Home",
+            CONF_LOCATION: {CONF_LATITUDE: 51.5074, CONF_LONGITUDE: -0.1278},
+            CALCULATION_METHOD: "mwl",
+        },
+        options={MADHAB: "shafi", REMINDER_MINUTES: 20},
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = MawaqeetDataUpdateCoordinator(hass, entry)
+    assert coordinator._get_reminder_minutes(PrayerTime.FAJR) == 20

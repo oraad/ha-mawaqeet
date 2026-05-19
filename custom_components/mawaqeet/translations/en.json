@@ -1,17 +1,35 @@
 {
     "config": {
+        "flow_title": "Mawaqeet",
         "step": {
             "user": {
-                "description": "If you need help with the configuration have a look here: https://github.com/oraad/ha-mawaqeet",
+                "title": "Set up Mawaqeet",
+                "description": "If you need help with the configuration, see {documentation_url}",
                 "data": {
                     "name": "Name",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "location": "Location",
                     "calculation_method": "Calculation Method"
+                },
+                "data_description": {
+                    "name": "Label for this location in Home Assistant.",
+                    "location": "Map position used to calculate prayer times.",
+                    "calculation_method": "Preset angles and rules for your region."
                 }
             },
             "adjustment": {
+                "title": "Prayer adjustments",
+                "data_description": {
+                    "madhab": "Affects Asr calculation (Shafi vs Hanafi).",
+                    "reminder_enabled": "Fire reminder events before each prayer.",
+                    "fajr_reminder_minutes": "Minutes before Fajr to fire the reminder event.",
+                    "shuruq_reminder_minutes": "Minutes before Shuruq to fire the reminder event.",
+                    "dhuhr_reminder_minutes": "Minutes before Dhuhr to fire the reminder event.",
+                    "asr_reminder_minutes": "Minutes before Asr to fire the reminder event.",
+                    "maghrib_reminder_minutes": "Minutes before Maghrib to fire the reminder event.",
+                    "ishaa_reminder_minutes": "Minutes before Ishaa to fire the reminder event."
+                },
                 "data": {
                     "madhab": "Madhab",
                     "fajr_angle": "Fajr Angle",
@@ -23,25 +41,64 @@
                     "dhuhr": "Dhuhr Offset",
                     "asr": "Asr Offset",
                     "maghrib": "Maghrib Offset",
-                    "ishaa": "Ishaa Offset"
+                    "ishaa": "Ishaa Offset",
+                    "reminder_enabled": "Prayer reminders",
+                    "fajr_reminder_minutes": "Fajr reminder (minutes before)",
+                    "shuruq_reminder_minutes": "Shuruq reminder (minutes before)",
+                    "dhuhr_reminder_minutes": "Dhuhr reminder (minutes before)",
+                    "asr_reminder_minutes": "Asr reminder (minutes before)",
+                    "maghrib_reminder_minutes": "Maghrib reminder (minutes before)",
+                    "ishaa_reminder_minutes": "Ishaa reminder (minutes before)"
+                }
+            },
+            "reconfigure": {
+                "title": "Reconfigure Mawaqeet",
+                "data_description": {
+                    "name": "Label for this location in Home Assistant.",
+                    "location": "Map position used to calculate prayer times.",
+                    "calculation_method": "Preset angles and rules for your region."
+                },
+                "data": {
+                    "name": "Name",
+                    "location": "Location",
+                    "calculation_method": "Calculation Method"
                 }
             }
         },
         "abort": {
-            "already_configured": "Device is already configured",
-            "coordinates_configured": "Device is already configured"
+            "already_configured": "This location is already configured",
+            "reconfigure_successful": "Configuration updated successfully"
         },
         "error": {}
     },
     "options": {
+        "flow_title": "Mawaqeet options",
         "step": {
             "adjustment": {
+                "title": "Prayer adjustments",
+                "data_description": {
+                    "madhab": "Affects Asr calculation (Shafi vs Hanafi).",
+                    "reminder_enabled": "Fire reminder events before each prayer.",
+                    "fajr_reminder_minutes": "Minutes before Fajr to fire the reminder event.",
+                    "shuruq_reminder_minutes": "Minutes before Shuruq to fire the reminder event.",
+                    "dhuhr_reminder_minutes": "Minutes before Dhuhr to fire the reminder event.",
+                    "asr_reminder_minutes": "Minutes before Asr to fire the reminder event.",
+                    "maghrib_reminder_minutes": "Minutes before Maghrib to fire the reminder event.",
+                    "ishaa_reminder_minutes": "Minutes before Ishaa to fire the reminder event."
+                },
                 "data": {
                     "madhab": "Madhab",
                     "fajr_angle": "Fajr Angle",
                     "ishaa_angle": "Ishaa Angle",
                     "ishaa_interval": "Ishaa Interval",
-                    "high_latitude_method": "High Latitude Method",
+                    "high_latitude_rule": "High Latitude Rule",
+                    "reminder_enabled": "Prayer reminders",
+                    "fajr_reminder_minutes": "Fajr reminder (minutes before)",
+                    "shuruq_reminder_minutes": "Shuruq reminder (minutes before)",
+                    "dhuhr_reminder_minutes": "Dhuhr reminder (minutes before)",
+                    "asr_reminder_minutes": "Asr reminder (minutes before)",
+                    "maghrib_reminder_minutes": "Maghrib reminder (minutes before)",
+                    "ishaa_reminder_minutes": "Ishaa reminder (minutes before)",
                     "fajr": "Fajr Offset",
                     "shuruq": "Shuruq Offset",
                     "dhuhr": "Dhuhr Offset",
@@ -84,26 +141,6 @@
         }
     },
     "entity": {
-        "button": {
-            "fajr_time": {
-                "name": "Fajr Time"
-            },
-            "shuruq_time": {
-                "name": "Shuruq Time"
-            },
-            "dhuhr_time": {
-                "name": "Dhuhr Time"
-            },
-            "fajr_reminder": {
-                "name": "Fajr Reminder"
-            },
-            "shuruq_reminder": {
-                "name": "Shuruq Reminder"
-            },
-            "dhuhr_reminder": {
-                "name": "Dhuhr Reminder"
-            }
-        },
         "sensor": {
             "fajr": {
                 "name": "Fajr"

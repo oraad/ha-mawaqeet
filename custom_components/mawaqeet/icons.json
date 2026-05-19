@@ -1,0 +1,53 @@
+{
+    "entity": {
+        "sensor": {
+            "fajr": {
+                "default": "mdi:weather-sunset-up"
+            },
+            "shuruq": {
+                "default": "mdi:weather-sunny"
+            },
+            "dhuhr": {
+                "default": "mdi:white-balance-sunny"
+            },
+            "asr": {
+                "default": "mdi:weather-partly-cloudy"
+            },
+            "maghrib": {
+                "default": "mdi:weather-sunset"
+            },
+            "ishaa": {
+                "default": "mdi:weather-night"
+            },
+            "midnight": {
+                "default": "mdi:clock-time-twelve"
+            },
+            "last_third": {
+                "default": "mdi:clock-outline"
+            },
+            "calculation_method": {
+                "default": "mdi:calculator-variant"
+            },
+            "madhab": {
+                "default": "mdi:book-open-variant"
+            },
+            "high_latitude_rule": {
+                "default": "mdi:latitude"
+            },
+            "night_length": {
+                "default": "mdi:timer-outline"
+            },
+            "night_duration": {
+                "default": "mdi:timer-sand"
+            }
+        },
+        "event": {
+            "latest_prayer_time": {
+                "default": "mdi:mosque"
+            },
+            "latest_prayer_reminder": {
+                "default": "mdi:bell-ring-outline"
+            }
+        }
+    }
+}

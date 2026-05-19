@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import voluptuous as vol
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
-    OptionsFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     LocationSelector,
     LocationSelectorConfig,
     NumberSelector,
@@ -26,22 +28,32 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CALCULATION_METHOD,
+    DEFAULT_REMINDER_MINUTES,
+    DOCUMENTATION_URL,
     DOMAIN,
     FAJR_ANGLE,
     HIGH_LATITUDE_RULE,
     ISHAA_ANGLE,
     ISHAA_INTERVAL,
     MADHAB,
+    REMINDER_ENABLED,
 )
-from .enum import CalculationMethod, HighLatitudeRule, Madhab, PrayerAdjustment
+from .enum import (
+    REMINDER_SCHEDULE_PRAYERS,
+    CalculationMethod,
+    HighLatitudeRule,
+    Madhab,
+    PrayerAdjustment,
+    prayer_reminder_minutes_key,
+)
+from .options import migrate_options
 
-if TYPE_CHECKING:
-    from homeassistant.data_entry_flow import FlowResult
+REMINDER_MINUTES_SELECTOR = NumberSelector(
+    NumberSelectorConfig(min=1, max=60, mode=NumberSelectorMode.BOX, step=1)
+)
 
 DATA_SCHEMA = {
     vol.Required(CONF_NAME): str,
-    # vol.Required(CONF_LATITUDE): cv.latitude,
-    # vol.Required(CONF_LONGITUDE): cv.longitude,
     vol.Required(CONF_LOCATION): LocationSelector(LocationSelectorConfig()),
     vol.Required(CALCULATION_METHOD): SelectSelector(
         SelectSelectorConfig(
@@ -104,7 +116,32 @@ ADJUSTMENT_SCHEMA = {
     vol.Optional(str(PrayerAdjustment.ISHAA), 0): NumberSelector(
         NumberSelectorConfig(min=-30, max=30, mode=NumberSelectorMode.BOX, step=1)
     ),
+    vol.Optional(REMINDER_ENABLED, default=True): BooleanSelector(),
+    **{
+        vol.Optional(
+            prayer_reminder_minutes_key(prayer), default=DEFAULT_REMINDER_MINUTES
+        ): REMINDER_MINUTES_SELECTOR
+        for prayer in REMINDER_SCHEDULE_PRAYERS
+    },
 }
+
+DEFAULT_ADJUSTMENT_VALUES = {
+    FAJR_ANGLE: 18,
+    ISHAA_ANGLE: 18,
+    ISHAA_INTERVAL: 0,
+    REMINDER_ENABLED: True,
+    **{
+        prayer_reminder_minutes_key(prayer): DEFAULT_REMINDER_MINUTES
+        for prayer in REMINDER_SCHEDULE_PRAYERS
+    },
+}
+
+
+def _location_unique_id(location: dict[str, float]) -> str:
+    """Build a stable unique id from a location dict."""
+    latitude = location[CONF_LATITUDE]
+    longitude = location[CONF_LONGITUDE]
+    return f"{latitude:.6f}_{longitude:.6f}"
 
 
 def _get_data_schema(
@@ -128,14 +165,17 @@ def _get_data_schema(
     }
 
 
-@callback
-def configured_instances(hass: HomeAssistant) -> set[str]:
-    """Return a set of configured instances."""
-    entries = [
-        str(entry.data.get(CONF_LOCATION))
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    ]
-    return set(entries)
+def _merged_options(config_entry: ConfigEntry) -> dict[str, Any]:
+    """Return options with defaults and legacy migration applied."""
+    return migrate_options({**DEFAULT_ADJUSTMENT_VALUES, **config_entry.options})
+
+
+def _build_adjustment_schema(calculation_method: str) -> vol.Schema:
+    """Build the adjustment options schema."""
+    data_schema = vol.Schema({})
+    if calculation_method == str(CalculationMethod.CUSTOM):
+        data_schema = data_schema.extend(CALCULATION_SCHEMA)
+    return data_schema.extend(ADJUSTMENT_SCHEMA)
 
 
 class MawaqeetFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -143,100 +183,105 @@ class MawaqeetFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize flow."""
+        self.user_data: dict[str, Any] = {}
+
     async def async_step_user(
         self,
         user_input: dict | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        _errors = {}
-
         if user_input is not None:
-            is_coordinates_predefined = str(
-                user_input.get(CONF_LOCATION)
-            ) in configured_instances(self.hass)
-
-            if is_coordinates_predefined:
-                _errors[CONF_LOCATION] = "coordinates_configured"
-
-            if len(_errors) == 0:
-                self.user_data = user_input
-                return await self.async_step_adjustment()
+            await self.async_set_unique_id(
+                _location_unique_id(user_input[CONF_LOCATION])
+            )
+            self._abort_if_unique_id_configured()
+            self.user_data = user_input
+            return await self.async_step_adjustment()
 
         data_schema = self.add_suggested_values_to_schema(
             vol.Schema(DATA_SCHEMA), _get_data_schema(self.hass)
         )
 
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=_errors, last_step=False
+            step_id="user",
+            data_schema=data_schema,
+            description_placeholders={"documentation_url": DOCUMENTATION_URL},
+            last_step=False,
         )
 
-    async def async_step_adjustment(self, user_input: dict | None = None) -> FlowResult:
+    async def async_step_adjustment(
+        self, user_input: dict | None = None
+    ) -> ConfigFlowResult:
         """Step adjustment."""
-        _errors: dict[str, str] = {}
-
         if user_input is not None:
             return self.async_create_entry(
-                title=self.user_data[CONF_NAME], data=self.user_data, options=user_input
+                title=self.user_data[CONF_NAME],
+                data=self.user_data,
+                options=migrate_options(user_input),
             )
 
-        data_schema = vol.Schema({})
-        if self.user_data[CALCULATION_METHOD] == str(CalculationMethod.CUSTOM):
-            data_schema = data_schema.extend(CALCULATION_SCHEMA)
-
-        data_schema = data_schema.extend(ADJUSTMENT_SCHEMA)
-
-        suggested_values = {
-            FAJR_ANGLE: 18,
-            ISHAA_ANGLE: 18,
-            ISHAA_INTERVAL: 0,
-        }
-
-        data_schema = self.add_suggested_values_to_schema(data_schema, suggested_values)
-        return self.async_show_form(
-            step_id="adjustment", data_schema=data_schema, errors=_errors
+        data_schema = _build_adjustment_schema(self.user_data[CALCULATION_METHOD])
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema, DEFAULT_ADJUSTMENT_VALUES
         )
+        return self.async_show_form(step_id="adjustment", data_schema=data_schema)
+
+    async def async_step_reconfigure(
+        self, user_input: dict | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            new_unique_id = _location_unique_id(user_input[CONF_LOCATION])
+            await self.async_set_unique_id(new_unique_id)
+            if new_unique_id == reconfigure_entry.unique_id:
+                self._abort_if_unique_id_mismatch()
+            else:
+                self._abort_if_unique_id_configured()
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data_updates=user_input,
+                unique_id=new_unique_id,
+            )
+
+        data_schema = self.add_suggested_values_to_schema(
+            vol.Schema(DATA_SCHEMA), _get_data_schema(self.hass, reconfigure_entry)
+        )
+
+        return self.async_show_form(step_id="reconfigure", data_schema=data_schema)
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        _config_entry: ConfigEntry,
+    ) -> MawaqeetOptionsFlowHandler:
         """Get the options flow for Mawaqeet."""
-        return OptionsFlowHandler(config_entry)
+        return MawaqeetOptionsFlowHandler()
 
 
-class OptionsFlowHandler(OptionsFlow):
+class MawaqeetOptionsFlowHandler(OptionsFlowWithReload):
     """Options flow for Mawaqeet component."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the Mawaqeet OptionsFlow."""
-        self._config_entry = config_entry
-
-    async def async_step_init(self, user_input: dict | None = None) -> Any:
-        """Step init."""
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure options for Mawaqeet."""
         return await self.async_step_adjustment(user_input)
 
-    async def async_step_adjustment(self, user_input: dict | None = None) -> FlowResult:
-        """Configure options for Mawaqeet."""
-        _errors: dict = {}
-
+    async def async_step_adjustment(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure adjustment options."""
         if user_input is not None:
-            # Update config entry with data from user input
-            self.hass.config_entries.async_update_entry(
-                self._config_entry, options=user_input
-            )
-            return self.async_create_entry(
-                title=self._config_entry.title, data=user_input
-            )
+            return self.async_create_entry(data=migrate_options(user_input))
 
-        data_schema = vol.Schema({})
-        if self._config_entry.data[CALCULATION_METHOD] == str(CalculationMethod.CUSTOM):
-            data_schema = data_schema.extend(CALCULATION_SCHEMA)
-
-        data_schema = data_schema.extend(ADJUSTMENT_SCHEMA)
-        options = self._config_entry.options
-        data_schema = self.add_suggested_values_to_schema(data_schema, options)
-
-        return self.async_show_form(
-            step_id="adjustment",
-            data_schema=data_schema,
-            errors=_errors,
+        calculation_method = self.config_entry.data[CALCULATION_METHOD]
+        data_schema = _build_adjustment_schema(calculation_method)
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema, _merged_options(self.config_entry)
         )
+
+        return self.async_show_form(step_id="adjustment", data_schema=data_schema)
