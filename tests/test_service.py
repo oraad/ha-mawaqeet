@@ -108,7 +108,7 @@ async def test_trigger_event_requires_loaded_entry(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, DOMAIN)
+    assert await async_setup_component(hass, DOMAIN, {})
 
     with pytest.raises(ServiceValidationError, match="not loaded"):
         await hass.services.async_call(
