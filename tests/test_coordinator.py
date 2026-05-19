@@ -62,6 +62,8 @@ async def test_coordinator_refresh(hass: HomeAssistant) -> None:
     assert coordinator.data is not None
     assert set(coordinator.data["prayer_times"].keys()) == set(PrayerTime)
 
+    coordinator.clear_event_sub()
+
 
 async def test_refresh_schedules_callbacks(hass: HomeAssistant) -> None:
     """Test refresh clears and schedules event callbacks."""
@@ -83,6 +85,7 @@ async def test_refresh_schedules_callbacks(hass: HomeAssistant) -> None:
 
     coordinator.clear_event_sub()
     coordinator.async_schedule_future_update(coordinator.data["prayer_times"])
+    coordinator.clear_event_sub()
 
 
 async def test_per_prayer_reminder_minutes(hass: HomeAssistant) -> None:
