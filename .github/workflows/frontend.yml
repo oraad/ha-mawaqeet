@@ -68,7 +68,7 @@ jobs:
           python-version: "3.14"
 
       - name: Restore pip cache
-        uses: actions/cache@0c35603622a026a8925de86b9fe2ad304cd0d041 # v4.2.3
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-latest-frontend-${{ hashFiles('requirements-test.txt') }}

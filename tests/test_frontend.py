@@ -59,7 +59,7 @@ async def test_lovelace_dict_style_data(hass: HomeAssistant) -> None:
     resources = MockLovelaceResources()
 
     class MockLovelace:
-        def get(self, key: str, default=None):
+        def get(self, key: str, default: object = None) -> object | None:
             return {"mode": "storage", "resources": resources}.get(key, default)
 
     hass.data[DOMAIN] = {}
@@ -101,7 +101,6 @@ async def test_lovelace_resources_api_unavailable(hass: HomeAssistant) -> None:
 
 async def test_lovelace_updates_existing_resource(hass: HomeAssistant) -> None:
     """Test updating an outdated Lovelace resource entry."""
-
     updated: list[dict] = []
 
     class MockLovelaceResources:
@@ -202,7 +201,7 @@ async def test_static_path_runtime_error_idempotent(hass: HomeAssistant) -> None
     class MockHttp:
         call_count = 0
 
-        async def async_register_static_paths(self, _paths) -> None:
+        async def async_register_static_paths(self, _paths: object) -> None:
             type(self).call_count += 1
             if type(self).call_count > 1:
                 msg = "already registered"
