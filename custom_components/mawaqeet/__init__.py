@@ -58,7 +58,8 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
     if not www.is_dir() or not bundle.is_file():
         _LOGGER.warning(
             "Mawaqeet Lovelace card bundle missing at %s. "
-            "Rebuild with: cd custom_components/mawaqeet/frontend && npm ci && npm run build",
+            "Rebuild with: cd custom_components/mawaqeet/frontend "
+            "&& npm ci && npm run build",
             bundle,
         )
         return
