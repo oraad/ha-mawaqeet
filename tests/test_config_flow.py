@@ -120,6 +120,10 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
         new_location[CONF_LATITUDE], new_location[CONF_LONGITUDE]
     )
 
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.state == ConfigEntryState.LOADED
+    entry.runtime_data.coordinator.clear_event_sub()
+
 
 async def test_custom_calculation_adjustment(hass: HomeAssistant) -> None:
     """Test custom calculation method shows angle fields in adjustment step."""
