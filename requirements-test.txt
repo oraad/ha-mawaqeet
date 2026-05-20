@@ -1,4 +1,7 @@
+# Pinned HA + frontend versions for the test.yml "pinned" matrix leg.
+# The "latest" leg upgrades homeassistant and home-assistant-frontend in CI.
 adhanpy==1.0.5
 colorlog==6.10.1
+home-assistant-frontend==20260312.0
 homeassistant==2026.3.2
 pytest-homeassistant-custom-component>=0.13.0

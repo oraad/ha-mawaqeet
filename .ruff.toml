@@ -42,3 +42,4 @@ max-complexity = 25
 ]
 "custom_components/mawaqeet/coordinator.py" = ["TC002"]
 "custom_components/mawaqeet/device_trigger.py" = ["TC002"]
+"custom_components/mawaqeet/frontend.py" = ["TC002", "PLR0911", "PLR0912"]
