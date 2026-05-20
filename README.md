@@ -19,9 +19,12 @@ Home Assistant integration for Islamic prayer times (Mawaqeet), calculated local
 
 ### HACS (recommended)
 
-1. Add this repository as a [custom repository](https://hacs.xyz/docs/faq/custom_repositories/) in HACS (category: Integration).
-2. Install **Mawaqeet** from the HACS Integrations tab.
-3. Restart Home Assistant.
+[![Open in HACS][hacs-badge]][hacs]
+
+Requires [HACS](https://hacs.xyz/). If this repository is not listed yet, add `https://github.com/oraad/ha-mawaqeet` as a [custom repository](https://hacs.xyz/docs/faq/custom_repositories/) (category: **Integration**), then use the button above.
+
+1. Install **Mawaqeet** from the HACS Integrations tab.
+2. Restart Home Assistant.
 
 ### Manual
 
@@ -258,6 +261,8 @@ MIT — see [LICENSE](LICENSE).
 [license-shield]: https://img.shields.io/github/license/oraad/ha-mawaqeet.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/oraad/ha-mawaqeet.svg?style=for-the-badge
 [releases]: https://github.com/oraad/ha-mawaqeet/releases
+[hacs-badge]: https://my.home-assistant.io/badges/hacs_repository.svg
+[hacs]: https://my.home-assistant.io/redirect/hacs_repository/?owner=oraad&repository=ha-mawaqeet&category=integration
 [import-adhan-ha-badge]: https://my.home-assistant.io/badges/blueprint_import.svg
 [import-adhan-ha]: https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Foraad%2Fha-mawaqeet%2Fblob%2Fmain%2Fblueprints%2Fadhan_home_assistant.yaml
 [import-adhan-ma-badge]: https://my.home-assistant.io/badges/blueprint_import.svg
