@@ -167,23 +167,9 @@ The integration ships a custom Lovelace card that binds to a **Mawaqeet location
 
 ### Setup
 
-Installing the integration **does not** add the card to the picker automatically. You must register the Lovelace resource once (the integration serves the file at `/mawaqeet/mawaqeet-prayer-card.js` after restart).
+When the integration loads, it **registers the Lovelace resource automatically** (storage-mode dashboards). After a refresh, **Mawaqeet Prayer** appears in the card picker. The module is served at `/mawaqeet/mawaqeet-prayer-card.js` (version query string is added for cache busting).
 
-1. **Settings → Dashboards → Resources → Add resource**
-   - URL: `/mawaqeet/mawaqeet-prayer-card.js`
-   - Resource type: **JavaScript module**
-2. Refresh the dashboard (or restart Home Assistant). **Mawaqeet Prayer** should appear when you add a card.
-
-**YAML dashboards** (optional): add the same URL under `lovelace.resources`:
-
-```yaml
-lovelace:
-  resources:
-    - url: /mawaqeet/mawaqeet-prayer-card.js
-      type: module
-```
-
-3. Add a card in the dashboard UI (**Mawaqeet Prayer**) or YAML:
+1. Add a card in the dashboard UI (**Mawaqeet Prayer**) or YAML:
 
 ```yaml
 type: custom:mawaqeet-prayer-card
@@ -193,6 +179,17 @@ show_shuruq: false
 ```
 
 Pick the device under **Settings → Devices & services → Mawaqeet →** your location. Each config entry is one device.
+
+**YAML-only Lovelace** cannot be updated from the UI; add the resource manually under `lovelace.resources`:
+
+```yaml
+lovelace:
+  resources:
+    - url: /mawaqeet/mawaqeet-prayer-card.js
+      type: module
+```
+
+**Troubleshooting (storage mode):** if the card is missing from the picker, reload the integration and check **Settings → Dashboards → Resources** for `/mawaqeet/mawaqeet-prayer-card.js`, then refresh the dashboard.
 
 ### Layouts
 
@@ -211,8 +208,8 @@ By default the card shows the five daily prayers (Fajr, Dhuhr, Asr, Maghrib, Ish
 
 | Symptom | Fix |
 | --- | --- |
-| **Mawaqeet Prayer** not in Add card list | Add the Lovelace resource (step 1 above) and refresh the dashboard |
-| Card type unknown | Add the Lovelace resource and restart Home Assistant |
+| **Mawaqeet Prayer** not in Add card list | Reload the integration; check **Settings → Dashboards → Resources** for `/mawaqeet/mawaqeet-prayer-card.js`. On YAML Lovelace, add the resource manually (see Setup). Refresh the dashboard |
+| Card type unknown | Ensure the Lovelace resource exists (auto-registered on load); restart Home Assistant |
 | `/mawaqeet/mawaqeet-prayer-card.js` returns 404 | Reinstall the integration (ensure `www/` is present); restart Home Assistant |
 | No prayer times found | Select the correct Mawaqeet device; confirm the integration is loaded |
 | Wrong location | One card per device; add another card for a second config entry |

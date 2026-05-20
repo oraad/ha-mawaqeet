@@ -6,7 +6,9 @@
   ],
   "config_flow": true,
   "dependencies": [
-    "http"
+    "frontend",
+    "http",
+    "lovelace"
   ],
   "documentation": "https://github.com/oraad/ha-mawaqeet",
   "iot_class": "calculated",

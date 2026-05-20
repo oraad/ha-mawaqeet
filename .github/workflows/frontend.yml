@@ -17,6 +17,10 @@ concurrency:
 
 permissions: {}
 
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_PREFER_BINARY: "1"
+
 jobs:
   build:
     name: Lovelace card
@@ -48,3 +52,51 @@ jobs:
       - name: Verify committed bundle exists
         working-directory: ${{ github.workspace }}
         run: test -s custom_components/mawaqeet/www/mawaqeet-prayer-card.js
+
+  pytest-latest-frontend:
+    name: Pytest (HA latest, frontend)
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: "3.14"
+
+      - name: Restore pip cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-latest-frontend-${{ hashFiles('requirements-test.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-latest-frontend-
+            ${{ runner.os }}-pip-latest-
+            ${{ runner.os }}-pip-pinned-
+
+      - name: Install test requirements
+        run: python3 -m pip install -r requirements-test.txt pytest-cov
+
+      - name: Upgrade Home Assistant stack to latest
+        run: |
+          python3 -m pip install -U \
+            homeassistant \
+            home-assistant-frontend \
+            pytest-homeassistant-custom-component
+
+      - name: Report Home Assistant version
+        run: |
+          python3 -c "from homeassistant.const import __version__; print('homeassistant:', __version__)"
+          python3 -c "import hass_frontend; print('home-assistant-frontend:', getattr(hass_frontend, '__version__', 'unknown'))"
+
+      - name: Run frontend integration tests
+        run: |
+          python3 -m pytest tests/test_frontend.py \
+            tests/test_init.py::test_frontend_registration \
+            tests/test_init.py::test_setup_entry_registers_frontend \
+            tests/test_init.py::test_register_lovelace_resource \
+            tests/test_init.py::test_setup_entry_registers_lovelace_resource \
+            -v

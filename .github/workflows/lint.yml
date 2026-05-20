@@ -16,6 +16,10 @@ concurrency:
 
 permissions: {}
 
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_PREFER_BINARY: "1"
+
 jobs:
   ruff:
     name: "Ruff"

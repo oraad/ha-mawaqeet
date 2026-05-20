@@ -26,10 +26,14 @@ coverage.xml
 
 # Virtual environments and secrets
 .venv/
+.venv*/
 venv/
 env/
 .env
 .env.*
+
+# Local pip / test scratch (e.g. Docker or py -3.14 setup)
+.pip_tmp/
 
 # Editors and OS
 .vscode/
