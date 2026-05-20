@@ -97,6 +97,7 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
         options={MADHAB: "shafi"},
     )
     entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
 
     result = await entry.start_reconfigure_flow(hass)
     assert result["type"] == FlowResultType.FORM
@@ -120,7 +121,7 @@ async def test_reconfigure_flow(hass: HomeAssistant) -> None:
         new_location[CONF_LATITUDE], new_location[CONF_LONGITUDE]
     )
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
     entry.runtime_data.coordinator.clear_event_sub()
 
