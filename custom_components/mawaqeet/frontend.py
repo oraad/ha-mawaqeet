@@ -27,7 +27,7 @@ _MANIFEST_PATH = Path(__file__).parent / "manifest.json"
 try:
     with _MANIFEST_PATH.open(encoding="utf-8") as manifest_file:
         _VERSION = json.load(manifest_file).get("version", "0.0.0")
-except (OSError, json.JSONDecodeError):
+except OSError, json.JSONDecodeError:
     _VERSION = "0.0.0"
 
 CARD_URL_VERSIONED = f"{CARD_URL}?v={_VERSION}"
