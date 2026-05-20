@@ -3,7 +3,7 @@ blueprint:
   description: >-
     Gradually turn on bedroom lights and optionally play a soft tone at Fajr or
     at the Mawaqeet Fajr reminder (lead time is set in Mawaqeet options). For
-    full adhan use the adhan blueprint instead. Test with mawaqeet.trigger_event.
+    full adhan use the adhan blueprints instead. Test with mawaqeet.trigger_event.
   domain: automation
   input:
     device_id:

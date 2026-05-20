@@ -2,7 +2,7 @@ blueprint:
   name: Prayer time lighting
   description: >-
     Control lights or scenes when a Mawaqeet prayer time occurs. Complements the
-    adhan blueprint (audio). Shuruq, midnight, and last third can be enabled
+    adhan blueprints (audio). Shuruq, midnight, and last third can be enabled
     separately. Test with mawaqeet.trigger_event (trigger_type prayer_time).
   domain: automation
   input:

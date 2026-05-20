@@ -68,29 +68,38 @@ When enabled (default), the integration fires reminder events before each upcomi
 
 ### Automations
 
-The [adhan blueprint](blueprints/adhan.yaml) plays adhan when a Mawaqeet prayer time fires. Import it from **Settings → Automations → Blueprints** (or place `blueprints/adhan.yaml` in your config `blueprints/` folder).
+Five automation blueprints ship with this repository. Use the **Import** badges to open the blueprint import dialog on your Home Assistant instance ([My Home Assistant](https://my.home-assistant.io) link). You can also import manually from **Settings → Automations → Blueprints**, or copy YAML into your config `blueprints/` folder.
 
-#### Blueprint options
+| Blueprint | Use when | Import |
+| --- | --- | --- |
+| [Adhan (Home Assistant)](blueprints/adhan_home_assistant.yaml) | Play adhan on prayer time via Sonos, Cast, and other `media_player` entities (not Music Assistant) | [![Import blueprint][import-adhan-ha-badge]][import-adhan-ha] |
+| [Adhan (Music Assistant)](blueprints/adhan_music_assistant.yaml) | Play adhan via `media_player` entities from the [Music Assistant](https://www.home-assistant.io/integrations/music_assistant/) integration | [![Import blueprint][import-adhan-ma-badge]][import-adhan-ma] |
+| [Fajr wake-up](blueprints/fajr_wakeup.yaml) | Gradually turn on lights (and optional tone) at Fajr or the Mawaqeet Fajr reminder; use adhan blueprints for full adhan | [![Import blueprint][import-fajr-wakeup-badge]][import-fajr-wakeup] |
+| [Prayer reminder notification](blueprints/prayer_reminder_notify.yaml) | Send a notification or TTS when a Mawaqeet prayer reminder fires | [![Import blueprint][import-prayer-reminder-badge]][import-prayer-reminder] |
+| [Prayer time lighting](blueprints/prayer_time_lights.yaml) | Control lights or scenes when a Mawaqeet prayer time occurs | [![Import blueprint][import-prayer-lights-badge]][import-prayer-lights] |
+
+#### Blueprint options (both adhan blueprints)
 
 | Input | Description |
 | --- | --- |
 | Location | Mawaqeet device (prayer time trigger) |
 | Playback mode | **Media playback** (normal play) or **Announcement** (duck/pause other audio where supported) |
-| Player backend | **Home Assistant** (`media_player.play_media`) or **Music Assistant** (`music_assistant.*` actions) |
 | Enable per prayer | Toggle Fajr, Dhuhr, Asr, Maghrib, Ishaa |
-| Fajr adhan (playback) | Player + file for Fajr in media playback mode |
-| Other prayers adhan (playback) | Player + file for Dhuhr–Ishaa in media playback mode |
-| Fajr adhan (announcement) | Player + file for Fajr in announcement mode (can differ from playback) |
-| Other prayers adhan (announcement) | Player + file for Dhuhr–Ishaa in announcement mode |
-| Announcement volume (Fajr / other) | Optional 0–100 for Music Assistant announcements only |
+| Fajr media player | `media_player` for Fajr (filtered by blueprint: all players vs MA-only) |
+| Other prayers media player | `media_player` for Dhuhr–Ishaa |
+| Fajr adhan audio (playback) | Audio file for Fajr in media playback mode |
+| Other prayers adhan audio (playback) | Audio for Dhuhr–Ishaa in media playback mode |
+| Fajr adhan audio (announcement) | Audio for Fajr in announcement mode (can differ from playback) |
+| Other prayers adhan audio (announcement) | Audio for Dhuhr–Ishaa in announcement mode |
+| Announcement volume (Fajr / other) | Music Assistant blueprint only: optional 0–100 |
 
-**Fajr vs other prayers:** Use the four media selectors to use a different clip or speaker for Fajr than for the rest of the day, and to use different assets for announcement vs full playback (e.g. short Fajr announce on kitchen speaker, full adhan on living room for playback).
+**Fajr vs other prayers:** Pick separate players and audio files for Fajr and for the rest of the day. Use different announcement vs playback clips if you want a short announce at Fajr and full adhan elsewhere.
 
-**Home Assistant + announcement:** Uses `announce: true` on `media_player.play_media` (works best on Sonos and similar players).
+**Home Assistant blueprint:** Uses `media_player.play_media`. Announcement mode sets `announce: true` (works best on Sonos and similar players). Do not select `media_player.ma_*` entities — use the Music Assistant blueprint for those.
 
-**Music Assistant:** Requires the [Music Assistant](https://www.home-assistant.io/integrations/music_assistant/) integration. Target MA media players (e.g. `media_player.ma_kitchen`). For announcements, local files under `/config/www/` (`http://<your-ha>/local/...`) or `http(s)` URLs work reliably; other media paths are resolved via `media_source.resolve_media` before playback.
+**Music Assistant blueprint:** Uses `music_assistant.play_media` and `music_assistant.play_announcement`. Player selectors list only Music Assistant players. For announcements, local files under `/config/www/` (`http://<your-ha>/local/...`) or `http(s)` URLs work reliably; other paths are resolved via `media_source.resolve_media`.
 
-**Defaults for existing setups:** Player backend **Home Assistant**, playback mode **Media playback** — same behavior as earlier blueprint versions if you re-create the automation and fill the four media fields (duplicate playback settings into announcement fields if you want the same audio in both modes).
+**Migration from the old combined `adhan.yaml` blueprint:** Import the Home Assistant or Music Assistant blueprint (badges above), then create a new automation. Map your old combined media picks to **player** + **audio** inputs (same speaker and file as before).
 
 Example (Music Assistant, Fajr announcement):
 
@@ -249,3 +258,13 @@ MIT — see [LICENSE](LICENSE).
 [license-shield]: https://img.shields.io/github/license/oraad/ha-mawaqeet.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/oraad/ha-mawaqeet.svg?style=for-the-badge
 [releases]: https://github.com/oraad/ha-mawaqeet/releases
+[import-adhan-ha-badge]: https://my.home-assistant.io/badges/blueprint_import.svg
+[import-adhan-ha]: https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Foraad%2Fha-mawaqeet%2Fblob%2Fmain%2Fblueprints%2Fadhan_home_assistant.yaml
+[import-adhan-ma-badge]: https://my.home-assistant.io/badges/blueprint_import.svg
+[import-adhan-ma]: https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Foraad%2Fha-mawaqeet%2Fblob%2Fmain%2Fblueprints%2Fadhan_music_assistant.yaml
+[import-fajr-wakeup-badge]: https://my.home-assistant.io/badges/blueprint_import.svg
+[import-fajr-wakeup]: https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Foraad%2Fha-mawaqeet%2Fblob%2Fmain%2Fblueprints%2Ffajr_wakeup.yaml
+[import-prayer-reminder-badge]: https://my.home-assistant.io/badges/blueprint_import.svg
+[import-prayer-reminder]: https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Foraad%2Fha-mawaqeet%2Fblob%2Fmain%2Fblueprints%2Fprayer_reminder_notify.yaml
+[import-prayer-lights-badge]: https://my.home-assistant.io/badges/blueprint_import.svg
+[import-prayer-lights]: https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Foraad%2Fha-mawaqeet%2Fblob%2Fmain%2Fblueprints%2Fprayer_time_lights.yaml

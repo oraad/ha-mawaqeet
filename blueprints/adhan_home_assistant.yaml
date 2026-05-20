@@ -1,0 +1,196 @@
+blueprint:
+  name: Adhan (Home Assistant)
+  description: >-
+    Play adhan on prayer time through Home Assistant media_player entities
+    (Sonos, Cast, and similar). Do not select Music Assistant players
+    (media_player.ma_*); use the Music Assistant adhan blueprint for those.
+    Supports media playback or announcement mode, with separate players and
+    audio for Fajr vs other prayers.
+  domain: automation
+  input:
+    device_id:
+      name: Location
+      description: Select Mawaqeet device
+      selector:
+        device:
+          filter:
+            integration: mawaqeet
+    playback_mode:
+      name: Playback mode
+      description: >-
+        Media playback plays the adhan normally. Announcement ducks or pauses
+        other audio on supported players (for example Sonos).
+      default: media_playback
+      selector:
+        select:
+          options:
+            - label: Media playback
+              value: media_playback
+            - label: Announcement
+              value: announcement
+    enable_fajr:
+      name: 'Enable: Fajr Adhan'
+      default: true
+      selector:
+        boolean: {}
+    enable_dhuhr:
+      name: 'Enable: Dhuhr Adhan'
+      default: true
+      selector:
+        boolean: {}
+    enable_asr:
+      name: 'Enable: Asr Adhan'
+      default: true
+      selector:
+        boolean: {}
+    enable_maghrib:
+      name: 'Enable: Maghrib Adhan'
+      default: true
+      selector:
+        boolean: {}
+    enable_ishaa:
+      name: 'Enable: Ishaa Adhan'
+      default: true
+      selector:
+        boolean: {}
+    player_fajr:
+      name: Fajr media player
+      description: >-
+        media_player entity for Fajr (not Music Assistant). Same player is used
+        for playback and announcement modes.
+      selector:
+        entity:
+          filter:
+            - domain: media_player
+    player_other:
+      name: Other prayers media player
+      description: >-
+        media_player entity for Dhuhr through Ishaa (not Music Assistant).
+      selector:
+        entity:
+          filter:
+            - domain: media_player
+    media_fajr_playback:
+      name: Fajr adhan audio (playback)
+      description: Adhan audio file for Fajr when using media playback mode.
+      selector:
+        media:
+          accept:
+            - audio/*
+            - music
+    media_other_playback:
+      name: Other prayers adhan audio (playback)
+      description: Adhan audio for Dhuhr through Ishaa in media playback mode.
+      selector:
+        media:
+          accept:
+            - audio/*
+            - music
+    media_fajr_announce:
+      name: Fajr adhan audio (announcement)
+      description: Adhan audio for Fajr in announcement mode (can differ from playback).
+      selector:
+        media:
+          accept:
+            - audio/*
+            - music
+    media_other_announce:
+      name: Other prayers adhan audio (announcement)
+      description: Adhan audio for Dhuhr through Ishaa in announcement mode.
+      selector:
+        media:
+          accept:
+            - audio/*
+            - music
+
+trigger:
+  - platform: device
+    domain: mawaqeet
+    device_id: !input device_id
+    type: prayer_time
+
+variables:
+  playback_mode: !input playback_mode
+  enable_fajr: !input enable_fajr
+  enable_dhuhr: !input enable_dhuhr
+  enable_asr: !input enable_asr
+  enable_maghrib: !input enable_maghrib
+  enable_ishaa: !input enable_ishaa
+  current_prayer: "{{ trigger.event.data.prayer }}"
+  player_fajr: !input player_fajr
+  player_other: !input player_other
+  media_fajr_playback: !input media_fajr_playback
+  media_other_playback: !input media_other_playback
+  media_fajr_announce: !input media_fajr_announce
+  media_other_announce: !input media_other_announce
+  adhan_entity_id: >-
+    {% if current_prayer == 'fajr' %}
+      {{ player_fajr }}
+    {% else %}
+      {{ player_other }}
+    {% endif %}
+  adhan_media_content_id: >-
+    {% if playback_mode == 'announcement' %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_fajr_announce.media_content_id }}
+      {% else %}
+        {{ media_other_announce.media_content_id }}
+      {% endif %}
+    {% else %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_fajr_playback.media_content_id }}
+      {% else %}
+        {{ media_other_playback.media_content_id }}
+      {% endif %}
+    {% endif %}
+  adhan_media_content_type: >-
+    {% if playback_mode == 'announcement' %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_fajr_announce.media_content_type }}
+      {% else %}
+        {{ media_other_announce.media_content_type }}
+      {% endif %}
+    {% else %}
+      {% if current_prayer == 'fajr' %}
+        {{ media_fajr_playback.media_content_type }}
+      {% else %}
+        {{ media_other_playback.media_content_type }}
+      {% endif %}
+    {% endif %}
+
+condition:
+  - condition: template
+    value_template: >-
+      {% set p = trigger.event.data.prayer %}
+      {{ (p == 'fajr' and enable_fajr) or (p == 'dhuhr' and enable_dhuhr) or
+         (p == 'asr' and enable_asr) or (p == 'maghrib' and enable_maghrib) or
+         (p == 'ishaa' and enable_ishaa) }}
+
+action:
+  - event: adhan_event
+    event_data:
+      prayer: "{{ current_prayer }}"
+  - choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ playback_mode == 'media_playback' }}"
+        sequence:
+          - action: media_player.play_media
+            target:
+              entity_id: "{{ adhan_entity_id }}"
+            data:
+              media_content_id: "{{ adhan_media_content_id }}"
+              media_content_type: "{{ adhan_media_content_type }}"
+      - conditions:
+          - condition: template
+            value_template: "{{ playback_mode == 'announcement' }}"
+        sequence:
+          - action: media_player.play_media
+            target:
+              entity_id: "{{ adhan_entity_id }}"
+            data:
+              media_content_id: "{{ adhan_media_content_id }}"
+              media_content_type: "{{ adhan_media_content_type }}"
+              announce: true
+
+mode: single
