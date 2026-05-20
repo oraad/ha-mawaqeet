@@ -7,6 +7,7 @@ https://github.com/oraad/ha-mawaqeet
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -19,6 +20,10 @@ from .coordinator import MawaqeetDataUpdateCoordinator
 from .data import MawaqeetRuntimeData
 from .options import migrate_options, options_need_migration
 from .service import async_setup_services
+
+_LOGGER = logging.getLogger(__name__)
+
+CARD_BUNDLE_FILENAME = "mawaqeet-prayer-card.js"
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -49,7 +54,13 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
         return
 
     www = Path(__file__).parent / "www"
-    if not www.is_dir():
+    bundle = www / CARD_BUNDLE_FILENAME
+    if not www.is_dir() or not bundle.is_file():
+        _LOGGER.warning(
+            "Mawaqeet Lovelace card bundle missing at %s. "
+            "Rebuild with: cd custom_components/mawaqeet/frontend && npm ci && npm run build",
+            bundle,
+        )
         return
 
     await hass.http.async_register_static_paths(
@@ -61,6 +72,8 @@ async def _async_register_frontend(hass: HomeAssistant) -> None:
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry
 async def async_setup_entry(hass: HomeAssistant, entry: MawaqeetConfigEntry) -> bool:
     """Set up this integration using UI."""
+    await _async_register_frontend(hass)
+
     if options_need_migration(entry.options):
         hass.config_entries.async_update_entry(
             entry, options=migrate_options(entry.options)

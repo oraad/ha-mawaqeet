@@ -69,6 +69,10 @@
             "already_configured": "This location is already configured",
             "reconfigure_successful": "Configuration updated successfully"
         },
+        "create_entry": {
+            "title": "Mawaqeet is ready",
+            "description": "Prayer sensors and events are available. To add the **Mawaqeet Prayer** card to the dashboard picker: go to **Settings → Dashboards → Resources**, add resource URL `/mawaqeet/mawaqeet-prayer-card.js` as **JavaScript module**, then refresh your dashboard."
+        },
         "error": {}
     },
     "options": {

@@ -88,21 +88,21 @@ Five automation blueprints ship with this repository. Use the **Import** badges 
 | Location | Mawaqeet device (prayer time trigger) |
 | Playback mode | **Media playback** (normal play) or **Announcement** (duck/pause other audio where supported) |
 | Enable per prayer | Toggle Fajr, Dhuhr, Asr, Maghrib, Ishaa |
-| Fajr media player | `media_player` for Fajr (filtered by blueprint: all players vs MA-only) |
-| Other prayers media player | `media_player` for Dhuhr–Ishaa |
+| Fajr media player(s) | One or more `media_player` entities for Fajr (HA: not MA; MA: MA players only) |
+| Other prayers media player(s) | One or more `media_player` entities for Dhuhr–Ishaa |
 | Fajr adhan audio (playback) | Audio file for Fajr in media playback mode |
 | Other prayers adhan audio (playback) | Audio for Dhuhr–Ishaa in media playback mode |
 | Fajr adhan audio (announcement) | Audio for Fajr in announcement mode (can differ from playback) |
 | Other prayers adhan audio (announcement) | Audio for Dhuhr–Ishaa in announcement mode |
 | Announcement volume (Fajr / other) | Music Assistant blueprint only: optional 0–100 |
 
-**Fajr vs other prayers:** Pick separate players and audio files for Fajr and for the rest of the day. Use different announcement vs playback clips if you want a short announce at Fajr and full adhan elsewhere.
+**Fajr vs other prayers:** Pick separate players and audio files for Fajr and for the rest of the day. Select **multiple** `media_player` entities per window to play adhan on all speakers at once. Use different announcement vs playback clips if you want a short announce at Fajr and full adhan elsewhere.
 
 **Home Assistant blueprint:** Uses `media_player.play_media`. Announcement mode sets `announce: true` (works best on Sonos and similar players). Do not select `media_player.ma_*` entities — use the Music Assistant blueprint for those.
 
 **Music Assistant blueprint:** Uses `music_assistant.play_media` and `music_assistant.play_announcement`. Player selectors list only Music Assistant players. For announcements, local files under `/config/www/` (`http://<your-ha>/local/...`) or `http(s)` URLs work reliably; other paths are resolved via `media_source.resolve_media`.
 
-**Migration from the old combined `adhan.yaml` blueprint:** Import the Home Assistant or Music Assistant blueprint (badges above), then create a new automation. Map your old combined media picks to **player** + **audio** inputs (same speaker and file as before).
+**Migration from older adhan blueprints:** Re-import the Home Assistant or Music Assistant blueprint (badges above), then edit or recreate your automation. Map each former single player to the new multi-select **media player(s)** fields (one entry per speaker). Audio inputs are unchanged.
 
 Example (Music Assistant, Fajr announcement):
 
@@ -167,17 +167,23 @@ The integration ships a custom Lovelace card that binds to a **Mawaqeet location
 
 ### Setup
 
-1. Add the card resource (served by the integration after restart):
+Installing the integration **does not** add the card to the picker automatically. You must register the Lovelace resource once (the integration serves the file at `/mawaqeet/mawaqeet-prayer-card.js` after restart).
+
+1. **Settings → Dashboards → Resources → Add resource**
+   - URL: `/mawaqeet/mawaqeet-prayer-card.js`
+   - Resource type: **JavaScript module**
+2. Refresh the dashboard (or restart Home Assistant). **Mawaqeet Prayer** should appear when you add a card.
+
+**YAML dashboards** (optional): add the same URL under `lovelace.resources`:
 
 ```yaml
 lovelace:
-  mode: storage
   resources:
     - url: /mawaqeet/mawaqeet-prayer-card.js
       type: module
 ```
 
-2. Add a card in the dashboard UI (**Mawaqeet Prayer**) or YAML:
+3. Add a card in the dashboard UI (**Mawaqeet Prayer**) or YAML:
 
 ```yaml
 type: custom:mawaqeet-prayer-card
@@ -205,7 +211,9 @@ By default the card shows the five daily prayers (Fajr, Dhuhr, Asr, Maghrib, Ish
 
 | Symptom | Fix |
 | --- | --- |
+| **Mawaqeet Prayer** not in Add card list | Add the Lovelace resource (step 1 above) and refresh the dashboard |
 | Card type unknown | Add the Lovelace resource and restart Home Assistant |
+| `/mawaqeet/mawaqeet-prayer-card.js` returns 404 | Reinstall the integration (ensure `www/` is present); restart Home Assistant |
 | No prayer times found | Select the correct Mawaqeet device; confirm the integration is loaded |
 | Wrong location | One card per device; add another card for a second config entry |
 
