@@ -39,6 +39,23 @@ async def test_setup_migrates_legacy_options(hass: HomeAssistant) -> None:
     assert entry.options[prayer_reminder_minutes_key(PrayerTime.FAJR)] == 12
 
 
+async def test_setup_entry_registers_frontend(hass: HomeAssistant) -> None:
+    """Test config entry setup registers Lovelace card static files."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Home",
+            CONF_LOCATION: {CONF_LATITUDE: 51.5074, CONF_LONGITUDE: -0.1278},
+            CALCULATION_METHOD: "mwl",
+        },
+        options={MADHAB: "shafi"},
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert hass.data[DOMAIN]["frontend_registered"] is True
+
+
 async def test_setup_and_unload(hass: HomeAssistant) -> None:
     """Test setup and unload."""
     entry = MockConfigEntry(

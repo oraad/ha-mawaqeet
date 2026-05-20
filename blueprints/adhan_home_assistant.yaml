@@ -5,7 +5,8 @@ blueprint:
     (Sonos, Cast, and similar). Do not select Music Assistant players
     (media_player.ma_*); use the Music Assistant adhan blueprint for those.
     Supports media playback or announcement mode, with separate players and
-    audio for Fajr vs other prayers.
+    audio for Fajr vs other prayers. Select one or more media players per
+    prayer window; adhan plays on all selected speakers at once.
   domain: automation
   input:
     device_id:
@@ -54,20 +55,23 @@ blueprint:
       selector:
         boolean: {}
     player_fajr:
-      name: Fajr media player
+      name: Fajr media player(s)
       description: >-
-        media_player entity for Fajr (not Music Assistant). Same player is used
-        for playback and announcement modes.
+        One or more media_player entities for Fajr (not Music Assistant).
+        Adhan plays on all selected speakers at once.
       selector:
         entity:
+          multiple: true
           filter:
             - domain: media_player
     player_other:
-      name: Other prayers media player
+      name: Other prayers media player(s)
       description: >-
-        media_player entity for Dhuhr through Ishaa (not Music Assistant).
+        One or more media_player entities for Dhuhr through Ishaa (not Music
+        Assistant). Adhan plays on all selected speakers at once.
       selector:
         entity:
+          multiple: true
           filter:
             - domain: media_player
     media_fajr_playback:
@@ -123,12 +127,20 @@ variables:
   media_other_playback: !input media_other_playback
   media_fajr_announce: !input media_fajr_announce
   media_other_announce: !input media_other_announce
-  adhan_entity_id: >-
-    {% if current_prayer == 'fajr' %}
-      {{ player_fajr }}
+  adhan_entity_ids: >-
+    {% set selection = player_fajr if current_prayer == 'fajr' else player_other %}
+    {% if selection is string %}
+      {% set items = [selection] %}
     {% else %}
-      {{ player_other }}
+      {% set items = selection %}
     {% endif %}
+    {% set ns = namespace(ids=[]) %}
+    {% for e in items %}
+      {% if not e.startswith('media_player.ma_') %}
+        {% set ns.ids = ns.ids + [e] %}
+      {% endif %}
+    {% endfor %}
+    {{ ns.ids | unique | list }}
   adhan_media_content_id: >-
     {% if playback_mode == 'announcement' %}
       {% if current_prayer == 'fajr' %}
@@ -170,6 +182,8 @@ action:
   - event: adhan_event
     event_data:
       prayer: "{{ current_prayer }}"
+  - condition: template
+    value_template: "{{ adhan_entity_ids | length > 0 }}"
   - choose:
       - conditions:
           - condition: template
@@ -177,7 +191,7 @@ action:
         sequence:
           - action: media_player.play_media
             target:
-              entity_id: "{{ adhan_entity_id }}"
+              entity_id: "{{ adhan_entity_ids }}"
             data:
               media_content_id: "{{ adhan_media_content_id }}"
               media_content_type: "{{ adhan_media_content_type }}"
@@ -187,7 +201,7 @@ action:
         sequence:
           - action: media_player.play_media
             target:
-              entity_id: "{{ adhan_entity_id }}"
+              entity_id: "{{ adhan_entity_ids }}"
             data:
               media_content_id: "{{ adhan_media_content_id }}"
               media_content_type: "{{ adhan_media_content_type }}"

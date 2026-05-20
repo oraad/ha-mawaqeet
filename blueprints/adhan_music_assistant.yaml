@@ -4,7 +4,9 @@ blueprint:
     Play adhan on prayer time through Music Assistant media players
     (media_player entities from the Music Assistant integration). Requires
     the Music Assistant integration. Supports media playback or announcement
-    mode, with separate players and audio for Fajr vs other prayers.
+    mode, with separate players and audio for Fajr vs other prayers. Select
+    one or more Music Assistant players per prayer window; adhan plays on all
+    selected speakers at once.
   domain: automation
   input:
     device_id:
@@ -53,19 +55,24 @@ blueprint:
       selector:
         boolean: {}
     player_fajr:
-      name: Fajr Music Assistant player
+      name: Fajr Music Assistant player(s)
       description: >-
-        Music Assistant media_player for Fajr (for example media_player.ma_kitchen).
+        One or more Music Assistant media_player entities for Fajr (for example
+        media_player.ma_kitchen). Adhan plays on all selected speakers at once.
       selector:
         entity:
+          multiple: true
           filter:
             - domain: media_player
               integration: music_assistant
     player_other:
-      name: Other prayers Music Assistant player
-      description: Music Assistant media_player for Dhuhr through Ishaa.
+      name: Other prayers Music Assistant player(s)
+      description: >-
+        One or more Music Assistant media_player entities for Dhuhr through
+        Ishaa. Adhan plays on all selected speakers at once.
       selector:
         entity:
+          multiple: true
           filter:
             - domain: media_player
               integration: music_assistant
@@ -150,11 +157,12 @@ variables:
   media_other_announce: !input media_other_announce
   announce_volume_fajr: !input announce_volume_fajr
   announce_volume: !input announce_volume
-  adhan_entity_id: >-
-    {% if current_prayer == 'fajr' %}
-      {{ player_fajr }}
+  adhan_entity_ids: >-
+    {% set selection = player_fajr if current_prayer == 'fajr' else player_other %}
+    {% if selection is string %}
+      {{ [selection] }}
     {% else %}
-      {{ player_other }}
+      {{ selection | unique | list }}
     {% endif %}
   adhan_media_content_id: >-
     {% if playback_mode == 'announcement' %}
@@ -205,18 +213,24 @@ action:
   - event: adhan_event
     event_data:
       prayer: "{{ current_prayer }}"
+  - condition: template
+    value_template: "{{ adhan_entity_ids | length > 0 }}"
   - choose:
       - conditions:
           - condition: template
             value_template: "{{ playback_mode == 'media_playback' }}"
         sequence:
-          - action: music_assistant.play_media
-            target:
-              entity_id: "{{ adhan_entity_id }}"
-            data:
-              media_id: "{{ adhan_media_content_id }}"
-              media_type: "{{ adhan_media_content_type }}"
-              enqueue: play
+          - repeat:
+              for_each: "{{ adhan_entity_ids }}"
+              parallel: true
+              sequence:
+                - action: music_assistant.play_media
+                  target:
+                    entity_id: "{{ repeat.item }}"
+                  data:
+                    media_id: "{{ adhan_media_content_id }}"
+                    media_type: "{{ adhan_media_content_type }}"
+                    enqueue: play
       - conditions:
           - condition: template
             value_template: "{{ playback_mode == 'announcement' }}"
@@ -231,28 +245,36 @@ action:
                   - condition: template
                     value_template: "{{ announce_vol is number }}"
                 sequence:
-                  - action: music_assistant.play_announcement
-                    target:
-                      entity_id: "{{ adhan_entity_id }}"
-                    data:
-                      url: >-
-                        {% if adhan_media_content_id is match('https?://.*') %}
-                          {{ adhan_media_content_id }}
-                        {% else %}
-                          {{ resolved_adhan.url }}
-                        {% endif %}
-                      announce_volume: "{{ announce_vol }}"
+                  - repeat:
+                      for_each: "{{ adhan_entity_ids }}"
+                      parallel: true
+                      sequence:
+                        - action: music_assistant.play_announcement
+                          target:
+                            entity_id: "{{ repeat.item }}"
+                          data:
+                            url: >-
+                              {% if adhan_media_content_id is match('https?://.*') %}
+                                {{ adhan_media_content_id }}
+                              {% else %}
+                                {{ resolved_adhan.url }}
+                              {% endif %}
+                            announce_volume: "{{ announce_vol }}"
               - conditions: []
                 sequence:
-                  - action: music_assistant.play_announcement
-                    target:
-                      entity_id: "{{ adhan_entity_id }}"
-                    data:
-                      url: >-
-                        {% if adhan_media_content_id is match('https?://.*') %}
-                          {{ adhan_media_content_id }}
-                        {% else %}
-                          {{ resolved_adhan.url }}
-                        {% endif %}
+                  - repeat:
+                      for_each: "{{ adhan_entity_ids }}"
+                      parallel: true
+                      sequence:
+                        - action: music_assistant.play_announcement
+                          target:
+                            entity_id: "{{ repeat.item }}"
+                          data:
+                            url: >-
+                              {% if adhan_media_content_id is match('https?://.*') %}
+                                {{ adhan_media_content_id }}
+                              {% else %}
+                                {{ resolved_adhan.url }}
+                              {% endif %}
 
 mode: single
