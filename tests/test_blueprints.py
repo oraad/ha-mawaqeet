@@ -12,6 +12,7 @@ from homeassistant.components.blueprint.const import CONF_INPUT, CONF_USE_BLUEPR
 from homeassistant.components.blueprint.models import Blueprint, BlueprintInputs
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.util import yaml as yaml_util
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -56,7 +57,6 @@ async def mawaqeet_device_id(hass: HomeAssistant) -> str:
     )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
-    from homeassistant.helpers import device_registry as dr
 
     device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
     assert device is not None
@@ -65,6 +65,20 @@ async def mawaqeet_device_id(hass: HomeAssistant) -> str:
 
 def _load_blueprint(path: Path) -> dict:
     return yaml_util.load_yaml_dict(path)
+
+
+async def _validate_substituted_automation(
+    hass: HomeAssistant,
+    config: dict,
+) -> None:
+    """Run full HA automation validation; raises on schema errors."""
+    result = await _async_validate_config_item(
+        hass,
+        config,
+        raise_on_errors=True,
+        warn_on_errors=False,
+    )
+    assert result.validation_status == ValidationStatus.OK, result.validation_error
 
 
 def _substituted_automation(
@@ -96,7 +110,7 @@ def _substituted_automation(
     ids=lambda p: p.name,
 )
 def test_blueprint_yaml_matches_automation_schema(blueprint_path: Path) -> None:
-    """Blueprint metadata and structure must match Home Assistant automation blueprint schema."""
+    """Blueprint YAML must match Home Assistant automation blueprint schema."""
     data = _load_blueprint(blueprint_path)
     AUTOMATION_BLUEPRINT_SCHEMA(data)
 
@@ -110,7 +124,7 @@ async def test_blueprint_generated_automation_valid(
     mawaqeet_device_id: str,
     blueprint_name: str,
 ) -> None:
-    """Substituted automation must pass full HA validation (triggers, conditions, actions)."""
+    """Substituted automation passes HA trigger, condition, and action validation."""
     path = BLUEPRINTS_DIR / blueprint_name
     data = _load_blueprint(path)
     inputs = {
@@ -118,8 +132,7 @@ async def test_blueprint_generated_automation_valid(
         **MINIMAL_BLUEPRINT_INPUTS[blueprint_name],
     }
     config = _substituted_automation(data, blueprint_name, inputs)
-    result = await _async_validate_config_item(hass, config, True, False)
-    assert result.validation_status == ValidationStatus.OK, result.validation_error
+    await _validate_substituted_automation(hass, config)
 
 
 @pytest.mark.parametrize(
@@ -137,7 +150,7 @@ async def test_adhan_blueprint_modes_validate(
     blueprint_name: str,
     playback_mode: str,
 ) -> None:
-    """Adhan blueprints validate for each playback mode with defaults-only unused media."""
+    """Adhan blueprints validate per playback mode with default unused media."""
     path = BLUEPRINTS_DIR / blueprint_name
     data = _load_blueprint(path)
     inputs = {
@@ -154,15 +167,14 @@ async def test_adhan_blueprint_modes_validate(
         inputs["media_other_announce"] = FAKE_MEDIA
 
     config = _substituted_automation(data, blueprint_name, inputs)
-    result = await _async_validate_config_item(hass, config, True, False)
-    assert result.validation_status == ValidationStatus.OK, result.validation_error
+    await _validate_substituted_automation(hass, config)
 
 
 async def test_adhan_blueprint_defaults_only_unused_media(
     hass: HomeAssistant,
     mawaqeet_device_id: str,
 ) -> None:
-    """Adhan blueprints accept blueprint defaults for unused mode-specific media fields."""
+    """Adhan blueprints accept defaults for unused mode-specific media fields."""
     for blueprint_name in ("adhan_home_assistant.yaml", "adhan_music_assistant.yaml"):
         path = BLUEPRINTS_DIR / blueprint_name
         data = _load_blueprint(path)
@@ -175,5 +187,4 @@ async def test_adhan_blueprint_defaults_only_unused_media(
             "media_other_playback": FAKE_MEDIA,
         }
         config = _substituted_automation(data, blueprint_name, inputs)
-        result = await _async_validate_config_item(hass, config, True, False)
-        assert result.validation_status == ValidationStatus.OK, result.validation_error
+        await _validate_substituted_automation(hass, config)

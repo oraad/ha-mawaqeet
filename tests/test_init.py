@@ -83,8 +83,10 @@ async def test_register_lovelace_resource(hass: HomeAssistant) -> None:
     assert hass.data[DOMAIN]["lovelace_resource_registered"] is True
 
 
-async def test_setup_entry_defers_lovelace_until_hass_started(hass: HomeAssistant) -> None:
-    """Test Lovelace registration waits for homeassistant_started when HA is not running."""
+async def test_setup_entry_defers_lovelace_until_hass_started(
+    hass: HomeAssistant,
+) -> None:
+    """Lovelace registration waits for homeassistant_started if HA is not running."""
     created_items: list[dict] = []
 
     class MockLovelaceResources:
