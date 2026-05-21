@@ -59,6 +59,7 @@ blueprint:
       description: >-
         One or more Music Assistant media_player entities for Fajr (for example
         media_player.ma_kitchen). Adhan plays on all selected speakers at once.
+      default: []
       selector:
         entity:
           multiple: true
@@ -70,6 +71,7 @@ blueprint:
       description: >-
         One or more Music Assistant media_player entities for Dhuhr through
         Ishaa. Adhan plays on all selected speakers at once.
+      default: []
       selector:
         entity:
           multiple: true
@@ -78,7 +80,12 @@ blueprint:
               integration: music_assistant
     media_fajr_playback:
       name: Fajr adhan audio (playback)
-      description: Adhan audio file for Fajr when using media playback mode.
+      description: >-
+        Adhan audio for Fajr in media playback mode. Leave empty if you only use
+        announcement mode for Fajr.
+      default:
+        media_content_id: ""
+        media_content_type: music
       selector:
         media:
           accept:
@@ -86,7 +93,12 @@ blueprint:
             - music
     media_other_playback:
       name: Other prayers adhan audio (playback)
-      description: Adhan audio for Dhuhr through Ishaa in media playback mode.
+      description: >-
+        Adhan audio for Dhuhr through Ishaa in media playback mode. Leave empty
+        if you only use announcement mode for other prayers.
+      default:
+        media_content_id: ""
+        media_content_type: music
       selector:
         media:
           accept:
@@ -96,7 +108,10 @@ blueprint:
       name: Fajr adhan audio (announcement)
       description: >-
         Adhan audio for Fajr in announcement mode. Prefer files in /config/www
-        or http(s) URLs.
+        or http(s) URLs. Leave empty if you only use media playback for Fajr.
+      default:
+        media_content_id: ""
+        media_content_type: music
       selector:
         media:
           accept:
@@ -106,7 +121,11 @@ blueprint:
       name: Other prayers adhan audio (announcement)
       description: >-
         Adhan audio for Dhuhr through Ishaa in announcement mode. Prefer files
-        in /config/www or http(s) URLs.
+        in /config/www or http(s) URLs. Leave empty if you only use media
+        playback for other prayers.
+      default:
+        media_content_id: ""
+        media_content_type: music
       selector:
         media:
           accept:
@@ -117,6 +136,7 @@ blueprint:
       description: >-
         Optional forced volume (0–100) for Fajr announcements. Leave empty to
         use the player default.
+      default: null
       selector:
         number:
           min: 0
@@ -128,6 +148,7 @@ blueprint:
       description: >-
         Optional forced volume (0–100) for other prayer announcements. Leave
         empty to use the player default.
+      default: null
       selector:
         number:
           min: 0
@@ -167,29 +188,29 @@ variables:
   adhan_media_content_id: >-
     {% if playback_mode == 'announcement' %}
       {% if current_prayer == 'fajr' %}
-        {{ media_fajr_announce.media_content_id }}
+        {{ media_fajr_announce.media_content_id | default('') }}
       {% else %}
-        {{ media_other_announce.media_content_id }}
+        {{ media_other_announce.media_content_id | default('') }}
       {% endif %}
     {% else %}
       {% if current_prayer == 'fajr' %}
-        {{ media_fajr_playback.media_content_id }}
+        {{ media_fajr_playback.media_content_id | default('') }}
       {% else %}
-        {{ media_other_playback.media_content_id }}
+        {{ media_other_playback.media_content_id | default('') }}
       {% endif %}
     {% endif %}
   adhan_media_content_type: >-
     {% if playback_mode == 'announcement' %}
       {% if current_prayer == 'fajr' %}
-        {{ media_fajr_announce.media_content_type }}
+        {{ media_fajr_announce.media_content_type | default('music') }}
       {% else %}
-        {{ media_other_announce.media_content_type }}
+        {{ media_other_announce.media_content_type | default('music') }}
       {% endif %}
     {% else %}
       {% if current_prayer == 'fajr' %}
-        {{ media_fajr_playback.media_content_type }}
+        {{ media_fajr_playback.media_content_type | default('music') }}
       {% else %}
-        {{ media_other_playback.media_content_type }}
+        {{ media_other_playback.media_content_type | default('music') }}
       {% endif %}
     {% endif %}
   announce_vol: >-
@@ -214,23 +235,20 @@ action:
     event_data:
       prayer: "{{ current_prayer }}"
   - condition: template
-    value_template: "{{ adhan_entity_ids | length > 0 }}"
+    value_template: >-
+      {{ adhan_entity_ids | length > 0 and adhan_media_content_id | length > 0 }}
   - choose:
       - conditions:
           - condition: template
             value_template: "{{ playback_mode == 'media_playback' }}"
         sequence:
-          - repeat:
-              for_each: "{{ adhan_entity_ids }}"
-              parallel: true
-              sequence:
-                - action: music_assistant.play_media
-                  target:
-                    entity_id: "{{ repeat.item }}"
-                  data:
-                    media_id: "{{ adhan_media_content_id }}"
-                    media_type: "{{ adhan_media_content_type }}"
-                    enqueue: play
+          - action: music_assistant.play_media
+            target:
+              entity_id: "{{ adhan_entity_ids }}"
+            data:
+              media_id: "{{ adhan_media_content_id }}"
+              media_type: "{{ adhan_media_content_type }}"
+              enqueue: play
       - conditions:
           - condition: template
             value_template: "{{ playback_mode == 'announcement' }}"
@@ -245,36 +263,28 @@ action:
                   - condition: template
                     value_template: "{{ announce_vol is number }}"
                 sequence:
-                  - repeat:
-                      for_each: "{{ adhan_entity_ids }}"
-                      parallel: true
-                      sequence:
-                        - action: music_assistant.play_announcement
-                          target:
-                            entity_id: "{{ repeat.item }}"
-                          data:
-                            url: >-
-                              {% if adhan_media_content_id is match('https?://.*') %}
-                                {{ adhan_media_content_id }}
-                              {% else %}
-                                {{ resolved_adhan.url }}
-                              {% endif %}
-                            announce_volume: "{{ announce_vol }}"
+                  - action: music_assistant.play_announcement
+                    target:
+                      entity_id: "{{ adhan_entity_ids }}"
+                    data:
+                      url: >-
+                        {% if adhan_media_content_id is match('https?://.*') %}
+                          {{ adhan_media_content_id }}
+                        {% else %}
+                          {{ resolved_adhan.url }}
+                        {% endif %}
+                      announce_volume: "{{ announce_vol }}"
               - conditions: []
                 sequence:
-                  - repeat:
-                      for_each: "{{ adhan_entity_ids }}"
-                      parallel: true
-                      sequence:
-                        - action: music_assistant.play_announcement
-                          target:
-                            entity_id: "{{ repeat.item }}"
-                          data:
-                            url: >-
-                              {% if adhan_media_content_id is match('https?://.*') %}
-                                {{ adhan_media_content_id }}
-                              {% else %}
-                                {{ resolved_adhan.url }}
-                              {% endif %}
+                  - action: music_assistant.play_announcement
+                    target:
+                      entity_id: "{{ adhan_entity_ids }}"
+                    data:
+                      url: >-
+                        {% if adhan_media_content_id is match('https?://.*') %}
+                          {{ adhan_media_content_id }}
+                        {% else %}
+                          {{ resolved_adhan.url }}
+                        {% endif %}
 
 mode: single
