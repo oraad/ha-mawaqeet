@@ -97,6 +97,30 @@ async def test_trigger_prayer_reminder_event(hass: HomeAssistant) -> None:
     assert state.attributes.get("event_type") == "dhuhr"
 
 
+async def test_trigger_event_rejects_unknown_config_entry(hass: HomeAssistant) -> None:
+    """Test trigger_event rejects a missing or foreign config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Home",
+        data=_entry_data(),
+        options={MADHAB: "shafi"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    with pytest.raises(ServiceValidationError, match="not found"):
+        await hass.services.async_call(
+            DOMAIN,
+            "trigger_event",
+            {
+                CONF_CONFIG_ENTRY: "missing-entry-id",
+                CONF_TRIGGER_TYPE: PRAYER_TIME_TRIGGER,
+                PRAYER: "fajr",
+            },
+            blocking=True,
+        )
+
+
 async def test_trigger_event_requires_loaded_entry(hass: HomeAssistant) -> None:
     """Test trigger_event rejects an unloaded config entry."""
     entry = MockConfigEntry(

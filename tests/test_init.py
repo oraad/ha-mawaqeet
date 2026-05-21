@@ -83,6 +83,47 @@ async def test_register_lovelace_resource(hass: HomeAssistant) -> None:
     assert hass.data[DOMAIN]["lovelace_resource_registered"] is True
 
 
+async def test_setup_entry_defers_lovelace_until_hass_started(hass: HomeAssistant) -> None:
+    """Test Lovelace registration waits for homeassistant_started when HA is not running."""
+    created_items: list[dict] = []
+
+    class MockLovelaceResources:
+        def async_items(self) -> list:
+            return []
+
+        async def async_create_item(self, item: dict) -> None:
+            created_items.append(item)
+
+    class MockLovelace:
+        mode = "storage"
+        resources = MockLovelaceResources()
+
+    await async_setup_component(hass, "lovelace", {})
+    hass.data["lovelace"] = MockLovelace()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Home",
+            CONF_LOCATION: {CONF_LATITUDE: 51.5074, CONF_LONGITUDE: -0.1278},
+            CALCULATION_METHOD: "mwl",
+        },
+        options={MADHAB: "shafi"},
+    )
+    entry.add_to_hass(hass)
+
+    hass.is_running = False
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    assert created_items == []
+
+    hass.is_running = True
+    hass.bus.async_fire("homeassistant_started")
+    await hass.async_block_till_done()
+
+    assert len(created_items) == 1
+    assert hass.data[DOMAIN]["lovelace_resource_registered"] is True
+
+
 async def test_setup_entry_registers_lovelace_resource(hass: HomeAssistant) -> None:
     """Test config entry setup auto-registers the Lovelace card resource."""
     created_items: list[dict] = []
