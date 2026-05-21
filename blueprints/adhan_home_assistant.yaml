@@ -59,6 +59,7 @@ blueprint:
       description: >-
         One or more media_player entities for Fajr (not Music Assistant).
         Adhan plays on all selected speakers at once.
+      default: []
       selector:
         entity:
           multiple: true
@@ -69,6 +70,7 @@ blueprint:
       description: >-
         One or more media_player entities for Dhuhr through Ishaa (not Music
         Assistant). Adhan plays on all selected speakers at once.
+      default: []
       selector:
         entity:
           multiple: true
@@ -76,7 +78,12 @@ blueprint:
             - domain: media_player
     media_fajr_playback:
       name: Fajr adhan audio (playback)
-      description: Adhan audio file for Fajr when using media playback mode.
+      description: >-
+        Adhan audio for Fajr in media playback mode. Leave empty if you only use
+        announcement mode for Fajr.
+      default:
+        media_content_id: ""
+        media_content_type: music
       selector:
         media:
           accept:
@@ -84,7 +91,12 @@ blueprint:
             - music
     media_other_playback:
       name: Other prayers adhan audio (playback)
-      description: Adhan audio for Dhuhr through Ishaa in media playback mode.
+      description: >-
+        Adhan audio for Dhuhr through Ishaa in media playback mode. Leave empty
+        if you only use announcement mode for other prayers.
+      default:
+        media_content_id: ""
+        media_content_type: music
       selector:
         media:
           accept:
@@ -92,7 +104,12 @@ blueprint:
             - music
     media_fajr_announce:
       name: Fajr adhan audio (announcement)
-      description: Adhan audio for Fajr in announcement mode (can differ from playback).
+      description: >-
+        Adhan audio for Fajr in announcement mode (can differ from playback).
+        Leave empty if you only use media playback for Fajr.
+      default:
+        media_content_id: ""
+        media_content_type: music
       selector:
         media:
           accept:
@@ -100,7 +117,12 @@ blueprint:
             - music
     media_other_announce:
       name: Other prayers adhan audio (announcement)
-      description: Adhan audio for Dhuhr through Ishaa in announcement mode.
+      description: >-
+        Adhan audio for Dhuhr through Ishaa in announcement mode. Leave empty if
+        you only use media playback for other prayers.
+      default:
+        media_content_id: ""
+        media_content_type: music
       selector:
         media:
           accept:
@@ -144,29 +166,29 @@ variables:
   adhan_media_content_id: >-
     {% if playback_mode == 'announcement' %}
       {% if current_prayer == 'fajr' %}
-        {{ media_fajr_announce.media_content_id }}
+        {{ media_fajr_announce.media_content_id | default('') }}
       {% else %}
-        {{ media_other_announce.media_content_id }}
+        {{ media_other_announce.media_content_id | default('') }}
       {% endif %}
     {% else %}
       {% if current_prayer == 'fajr' %}
-        {{ media_fajr_playback.media_content_id }}
+        {{ media_fajr_playback.media_content_id | default('') }}
       {% else %}
-        {{ media_other_playback.media_content_id }}
+        {{ media_other_playback.media_content_id | default('') }}
       {% endif %}
     {% endif %}
   adhan_media_content_type: >-
     {% if playback_mode == 'announcement' %}
       {% if current_prayer == 'fajr' %}
-        {{ media_fajr_announce.media_content_type }}
+        {{ media_fajr_announce.media_content_type | default('music') }}
       {% else %}
-        {{ media_other_announce.media_content_type }}
+        {{ media_other_announce.media_content_type | default('music') }}
       {% endif %}
     {% else %}
       {% if current_prayer == 'fajr' %}
-        {{ media_fajr_playback.media_content_type }}
+        {{ media_fajr_playback.media_content_type | default('music') }}
       {% else %}
-        {{ media_other_playback.media_content_type }}
+        {{ media_other_playback.media_content_type | default('music') }}
       {% endif %}
     {% endif %}
 
@@ -183,7 +205,8 @@ action:
     event_data:
       prayer: "{{ current_prayer }}"
   - condition: template
-    value_template: "{{ adhan_entity_ids | length > 0 }}"
+    value_template: >-
+      {{ adhan_entity_ids | length > 0 and adhan_media_content_id | length > 0 }}
   - choose:
       - conditions:
           - condition: template

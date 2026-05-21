@@ -44,6 +44,16 @@ export type CardLayout =
 
 export type TimeFormat = "system" | "24" | "12";
 
+/** Sections-view grid sizing (Home Assistant LovelaceGridOptions). */
+export interface LovelaceGridOptions {
+  columns?: number | "full";
+  rows?: number | "auto";
+  max_columns?: number;
+  min_columns?: number;
+  min_rows?: number;
+  max_rows?: number;
+}
+
 export interface MawaqeetCardConfig {
   type: string;
   device?: string;

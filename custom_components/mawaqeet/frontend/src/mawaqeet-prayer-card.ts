@@ -1,9 +1,14 @@
 import { LitElement, html, type CSSResultGroup, type PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { resolvePrayerEntities } from "./entity-resolver";
+import { gridOptionsForLayout } from "./grid-options";
 import { renderError, renderLayout } from "./layouts/render";
 import { cardStyles } from "./styles";
-import type { HomeAssistant, MawaqeetCardConfig } from "./types";
+import type {
+  HomeAssistant,
+  LovelaceGridOptions,
+  MawaqeetCardConfig,
+} from "./types";
 
 declare global {
   interface HTMLElementTagNameMap {
@@ -60,6 +65,11 @@ export class MawaqeetPrayerCard extends LitElement {
       default:
         return 2;
     }
+  }
+
+  public getGridOptions(): LovelaceGridOptions {
+    const layout = this._config?.layout ?? "next";
+    return gridOptionsForLayout(layout);
   }
 
   public static async getConfigElement(): Promise<HTMLElement> {
@@ -228,10 +238,12 @@ const EDITOR_LABELS: Record<string, string> = {
   show_device_name: "Show location name",
 };
 
-window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "mawaqeet-prayer-card",
-  name: "Mawaqeet Prayer",
-  description: "Prayer times from a Mawaqeet location device",
-  preview: true,
-});
+if (typeof window !== "undefined") {
+  window.customCards = window.customCards || [];
+  window.customCards.push({
+    type: "mawaqeet-prayer-card",
+    name: "Mawaqeet Prayer",
+    description: "Prayer times from a Mawaqeet location device",
+    preview: true,
+  });
+}

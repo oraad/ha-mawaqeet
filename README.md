@@ -96,13 +96,15 @@ Five automation blueprints ship with this repository. Use the **Import** badges 
 | Other prayers adhan audio (announcement) | Audio for Dhuhr–Ishaa in announcement mode |
 | Announcement volume (Fajr / other) | Music Assistant blueprint only: optional 0–100 |
 
-**Fajr vs other prayers:** Pick separate players and audio files for Fajr and for the rest of the day. Select **multiple** `media_player` entities per window to play adhan on all speakers at once. Use different announcement vs playback clips if you want a short announce at Fajr and full adhan elsewhere.
+**Fajr vs other prayers:** Pick separate players and audio files for Fajr and for the rest of the day. Select **multiple** `media_player` entities per window to play adhan on all speakers at once (one action targets every selected player). Use different announcement vs playback clips if you want a short announce at Fajr and full adhan elsewhere.
+
+**Optional fields:** After re-importing, you only need to fill media and players for your chosen **playback mode**. The other mode’s audio fields can stay at their defaults (empty). Player lists default to empty until you add speakers.
 
 **Home Assistant blueprint:** Uses `media_player.play_media`. Announcement mode sets `announce: true` (works best on Sonos and similar players). Do not select `media_player.ma_*` entities — use the Music Assistant blueprint for those.
 
 **Music Assistant blueprint:** Uses `music_assistant.play_media` and `music_assistant.play_announcement`. Player selectors list only Music Assistant players. For announcements, local files under `/config/www/` (`http://<your-ha>/local/...`) or `http(s)` URLs work reliably; other paths are resolved via `media_source.resolve_media`.
 
-**Migration from older adhan blueprints:** Re-import the Home Assistant or Music Assistant blueprint (badges above), then edit or recreate your automation. Map each former single player to the new multi-select **media player(s)** fields (one entry per speaker). Audio inputs are unchanged.
+**Migration from older adhan blueprints:** Re-import the Home Assistant or Music Assistant blueprint (badges above), then edit or recreate your automation. Map each former single player to the new multi-select **media player(s)** fields (one entry per speaker). If you see *Message malformed* about `repeat.parallel`, you are on an older Music Assistant blueprint — re-import fixes it.
 
 Example (Music Assistant, Fajr announcement):
 
