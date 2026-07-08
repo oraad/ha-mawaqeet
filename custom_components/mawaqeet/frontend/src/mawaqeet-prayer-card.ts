@@ -8,6 +8,7 @@ import type {
   HomeAssistant,
   LovelaceGridOptions,
   MawaqeetCardConfig,
+  PrayerKey,
 } from "./types";
 
 declare global {
@@ -43,6 +44,8 @@ export class MawaqeetPrayerCard extends LitElement {
       type: "custom:mawaqeet-prayer-card",
       layout: "next",
       show_shuruq: false,
+      show_midnight: false,
+      show_last_third: false,
       show_passed_style: true,
       time_format: "system",
       show_relative: true,
@@ -81,6 +84,8 @@ export class MawaqeetPrayerCard extends LitElement {
       type: "custom:mawaqeet-prayer-card",
       layout: "next",
       show_shuruq: false,
+      show_midnight: false,
+      show_last_third: false,
     };
   }
 
@@ -109,11 +114,16 @@ export class MawaqeetPrayerCard extends LitElement {
       return html`<ha-card><div class="error">Loading…</div></ha-card>`;
     }
 
-    const showShuruq = this._config.show_shuruq === true;
+    const displayOptions = {
+      showShuruq: this._config.show_shuruq === true,
+      showMidnight: this._config.show_midnight === true,
+      showLastThird: this._config.show_last_third === true,
+    };
     const prayers = resolvePrayerEntities(
       this.hass,
       this._config.device!,
-      showShuruq,
+      displayOptions,
+      this._config.icons,
     );
 
     let body;
@@ -148,46 +158,93 @@ export class MawaqeetPrayerCard extends LitElement {
   }
 }
 
-const EDITOR_SCHEMA = [
-  {
-    name: "device",
-    required: true,
-    selector: {
-      device: { filter: { integration: "mawaqeet" } },
-    },
-  },
-  {
-    name: "layout",
-    selector: {
-      select: {
-        options: [
-          { value: "next", label: "Next prayer" },
-          { value: "horizontal", label: "Horizontal timetable" },
-          { value: "vertical", label: "Vertical timetable" },
-          { value: "combined", label: "Combined (next + horizontal)" },
-          { value: "timeline", label: "Day timeline" },
-          { value: "agenda", label: "Agenda" },
-        ],
+type HaFormSchema = Record<string, unknown> & { name: string };
+
+function buildEditorSchema(config: MawaqeetCardConfig): HaFormSchema[] {
+  const iconFields: HaFormSchema[] = [
+    { name: "fajr", selector: { icon: {} } },
+  ];
+  if (config.show_shuruq) {
+    iconFields.push({ name: "shuruq", selector: { icon: {} } });
+  }
+  iconFields.push(
+    { name: "dhuhr", selector: { icon: {} } },
+    { name: "asr", selector: { icon: {} } },
+    { name: "maghrib", selector: { icon: {} } },
+    { name: "ishaa", selector: { icon: {} } },
+  );
+  if (config.show_midnight) {
+    iconFields.push({ name: "midnight", selector: { icon: {} } });
+  }
+  if (config.show_last_third) {
+    iconFields.push({ name: "last_third", selector: { icon: {} } });
+  }
+
+  return [
+    {
+      name: "device",
+      required: true,
+      selector: {
+        device: { filter: { integration: "mawaqeet" } },
       },
     },
-  },
-  { name: "show_shuruq", selector: { boolean: {} } },
-  { name: "show_passed_style", selector: { boolean: {} } },
-  {
-    name: "time_format",
-    selector: {
-      select: {
-        options: [
-          { value: "system", label: "System" },
-          { value: "24", label: "24-hour" },
-          { value: "12", label: "12-hour" },
-        ],
+    {
+      name: "layout",
+      selector: {
+        select: {
+          options: [
+            { value: "next", label: "Next prayer" },
+            { value: "horizontal", label: "Horizontal timetable" },
+            { value: "vertical", label: "Vertical timetable" },
+            { value: "combined", label: "Combined (next + horizontal)" },
+            { value: "timeline", label: "Day timeline" },
+            { value: "agenda", label: "Agenda" },
+          ],
+        },
       },
     },
-  },
-  { name: "show_relative", selector: { boolean: {} } },
-  { name: "show_device_name", selector: { boolean: {} } },
-];
+    { name: "show_shuruq", selector: { boolean: {} } },
+    { name: "show_midnight", selector: { boolean: {} } },
+    { name: "show_last_third", selector: { boolean: {} } },
+    { name: "show_passed_style", selector: { boolean: {} } },
+    {
+      name: "time_format",
+      selector: {
+        select: {
+          options: [
+            { value: "system", label: "System" },
+            { value: "24", label: "24-hour" },
+            { value: "12", label: "12-hour" },
+          ],
+        },
+      },
+    },
+    { name: "show_relative", selector: { boolean: {} } },
+    { name: "show_device_name", selector: { boolean: {} } },
+    {
+      name: "icons",
+      type: "expandable",
+      title: "Custom prayer icons",
+      schema: iconFields,
+      expanded: false,
+    },
+  ];
+}
+
+function sanitizeIcons(
+  icons: Partial<Record<PrayerKey, string>> | undefined,
+): Partial<Record<PrayerKey, string>> | undefined {
+  if (!icons) {
+    return undefined;
+  }
+  const cleaned: Partial<Record<PrayerKey, string>> = {};
+  for (const [key, value] of Object.entries(icons)) {
+    if (typeof value === "string" && value.trim()) {
+      cleaned[key as PrayerKey] = value.trim();
+    }
+  }
+  return Object.keys(cleaned).length ? cleaned : undefined;
+}
 
 @customElement("mawaqeet-prayer-card-editor")
 export class MawaqeetPrayerCardEditor extends LitElement {
@@ -207,7 +264,7 @@ export class MawaqeetPrayerCardEditor extends LitElement {
       <ha-form
         .hass=${this.hass}
         .data=${this._config}
-        .schema=${EDITOR_SCHEMA}
+        .schema=${buildEditorSchema(this._config)}
         .computeLabel=${(schema: { name: string }) =>
           EDITOR_LABELS[schema.name] ?? schema.name}
         @value-changed=${this._changed}
@@ -217,7 +274,14 @@ export class MawaqeetPrayerCardEditor extends LitElement {
 
   private _changed(ev: CustomEvent): void {
     ev.stopPropagation();
-    const config = ev.detail.value as MawaqeetCardConfig;
+    const value = ev.detail.value as MawaqeetCardConfig;
+    const icons = sanitizeIcons(value.icons);
+    const config: MawaqeetCardConfig = { ...value };
+    if (icons) {
+      config.icons = icons;
+    } else {
+      delete config.icons;
+    }
     this._config = config;
     const event = new CustomEvent("config-changed", {
       detail: { config },
@@ -232,10 +296,21 @@ const EDITOR_LABELS: Record<string, string> = {
   device: "Mawaqeet location",
   layout: "Layout",
   show_shuruq: "Show Shuruq (sunrise)",
+  show_midnight: "Show Midnight",
+  show_last_third: "Show Last Third",
   show_passed_style: "Dim passed prayers",
   time_format: "Time format",
   show_relative: "Show relative times",
   show_device_name: "Show location name",
+  icons: "Custom prayer icons",
+  fajr: "Fajr",
+  shuruq: "Shuruq",
+  dhuhr: "Dhuhr",
+  asr: "Asr",
+  maghrib: "Maghrib",
+  ishaa: "Ishaa",
+  midnight: "Midnight",
+  last_third: "Last Third",
 };
 
 if (typeof window !== "undefined") {

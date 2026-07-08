@@ -2,6 +2,8 @@ import {
   buildPrayerOrder,
   isPrayerKey,
   prayerSortIndex,
+  requiredPrayerCount,
+  type PrayerDisplayOptions,
   type PrayerKey,
 } from "./prayer-order";
 import type {
@@ -14,6 +16,33 @@ import type {
 const DOMAIN = "mawaqeet";
 const DEFAULT_ICON = "mdi:mosque";
 
+/** Defaults mirror custom_components/mawaqeet/icons.json entity icons. */
+export const PRAYER_DEFAULT_ICONS: Record<PrayerKey, string> = {
+  fajr: "mdi:weather-sunset-up",
+  shuruq: "mdi:weather-sunny",
+  dhuhr: "mdi:white-balance-sunny",
+  asr: "mdi:weather-partly-cloudy",
+  maghrib: "mdi:weather-sunset",
+  ishaa: "mdi:weather-night",
+  midnight: "mdi:clock-time-twelve",
+  last_third: "mdi:clock-outline",
+};
+
+export function resolvePrayerIcon(
+  key: PrayerKey,
+  stateIcon: string | undefined,
+  configIcons?: Partial<Record<PrayerKey, string>>,
+): string {
+  const override = configIcons?.[key];
+  if (override) {
+    return override;
+  }
+  if (stateIcon) {
+    return stateIcon;
+  }
+  return PRAYER_DEFAULT_ICONS[key] || DEFAULT_ICON;
+}
+
 export function extractPrayerKey(entry: EntityRegistryEntry): string | null {
   if (entry.translation_key) {
     return entry.translation_key;
@@ -25,13 +54,14 @@ export function extractPrayerKey(entry: EntityRegistryEntry): string | null {
 export function resolvePrayerEntities(
   hass: HomeAssistant,
   deviceId: string,
-  showShuruq: boolean,
+  options: PrayerDisplayOptions = {},
+  configIcons?: Partial<Record<PrayerKey, string>>,
 ): ResolvedPrayer[] {
   if (!deviceId || !hass.entities) {
     return [];
   }
 
-  const order = buildPrayerOrder(showShuruq);
+  const order = buildPrayerOrder(options);
   const resolved: ResolvedPrayer[] = [];
 
   for (const entry of Object.values(hass.entities)) {
@@ -43,7 +73,7 @@ export function resolvePrayerEntities(
     }
 
     const key = extractPrayerKey(entry);
-    if (!key || !isPrayerKey(key, showShuruq)) {
+    if (!key || !isPrayerKey(key, options)) {
       continue;
     }
 
@@ -66,7 +96,11 @@ export function resolvePrayerEntities(
       entity_id: entry.entity_id,
       prayer_key: key,
       label: formatPrayerLabel(hass, entry, state),
-      icon: (state.attributes.icon as string) || DEFAULT_ICON,
+      icon: resolvePrayerIcon(
+        key,
+        state.attributes.icon as string | undefined,
+        configIcons,
+      ),
       at,
       state,
     });
@@ -74,19 +108,22 @@ export function resolvePrayerEntities(
 
   resolved.sort(
     (a, b) =>
-      prayerSortIndex(a.prayer_key, showShuruq) -
-      prayerSortIndex(b.prayer_key, showShuruq),
+      prayerSortIndex(a.prayer_key, options) -
+      prayerSortIndex(b.prayer_key, options),
   );
 
-  const required = showShuruq ? 6 : CORE_PRAYER_COUNT;
-  if (resolved.length < required) {
+  const required = requiredPrayerCount(options);
+  const coreAndShuruq = resolved.filter((p) =>
+    (order as readonly string[])
+      .filter((k) => k !== "midnight" && k !== "last_third")
+      .includes(p.prayer_key),
+  );
+  if (coreAndShuruq.length < required) {
     return [];
   }
 
   return resolved;
 }
-
-const CORE_PRAYER_COUNT = 5;
 
 export interface NextPrayerInfo {
   prayer: ResolvedPrayer;
@@ -147,7 +184,7 @@ export function formatPrayerLabel(
       return localized;
     }
   }
-  return state.attributes.friendly_name as string || entry.entity_id;
+  return (state.attributes.friendly_name as string) || entry.entity_id;
 }
 
 export function formatTime(

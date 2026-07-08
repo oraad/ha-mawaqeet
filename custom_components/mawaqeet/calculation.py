@@ -12,8 +12,16 @@ from adhanpy.PrayerTimes import (  # type: ignore[import-untyped]
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 
-from .const import FAJR_ANGLE, HIGH_LATITUDE_RULE, ISHAA_ANGLE, ISHAA_INTERVAL, MADHAB
+from .const import (
+    CALCULATION_METHOD,
+    FAJR_ANGLE,
+    HIGH_LATITUDE_RULE,
+    ISHAA_ANGLE,
+    ISHAA_INTERVAL,
+    MADHAB,
+)
 from .enum import (
+    CalculationMethod,
     HighLatitudeRule,
     Madhab,
     PrayerAdjustment,
@@ -30,14 +38,16 @@ from .mapper import (
 from .options import get_calculation_method
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from homeassistant.core import HomeAssistant
 
     from .data import MawaqeetConfigEntry
     from .models import Coordinates, MawaqeetData, PrayerTimeConfig, PrayerTimeEntries
 
 
-def _get_adjustments(config_entry: MawaqeetConfigEntry) -> Any:
-    options = config_entry.options
+def _get_adjustments(options: Mapping[str, Any]) -> Any:
+    """Build adhanpy adjustments from options."""
     adjustments = PrayerAdjustments(
         fajr=int(options.get(str(PrayerAdjustment.FAJR), 0)),
         shuruq=int(options.get(str(PrayerAdjustment.SHURUQ), 0)),
@@ -49,21 +59,24 @@ def _get_adjustments(config_entry: MawaqeetConfigEntry) -> Any:
     return PrayerAdjustmentMapper.to_adhanpy(adjustments)
 
 
-def _get_calculation_parameters(
-    config_entry: MawaqeetConfigEntry,
-) -> CalculationParameters:
-    options = config_entry.options
-    calculation_method = get_calculation_method(config_entry)
+def _get_calculation_parameters(options: Mapping[str, Any]) -> CalculationParameters:
+    """Build adhanpy calculation parameters from options."""
+    calculation_method = options.get(
+        CALCULATION_METHOD, str(CalculationMethod.MUSLIM_WORLD_LEAGUE)
+    )
     calc_method_params = CalculationMethodMapper.to_adhanpy(calculation_method)
 
-    calculation_parameters = CalculationParameters(
-        **{
-            "fajr_angle": float(options.get(FAJR_ANGLE, 0.0)),
-            "isha_angle": float(options.get(ISHAA_ANGLE, 0.0)),
+    if calculation_method == str(CalculationMethod.CUSTOM):
+        params: dict[str, Any] = {
+            "fajr_angle": float(options.get(FAJR_ANGLE, 18.0)),
+            "isha_angle": float(options.get(ISHAA_ANGLE, 18.0)),
             "isha_interval": int(options.get(ISHAA_INTERVAL, 0)),
             **calc_method_params,
         }
-    )
+    else:
+        params = dict(calc_method_params)
+
+    calculation_parameters = CalculationParameters(**params)
 
     madhab: str = options.get(MADHAB, Madhab.SHAFI)
     high_latitude_rule: str = options.get(
@@ -77,15 +90,16 @@ def _get_calculation_parameters(
 
 
 def _get_mawaqeet_parameters(
-    config_entry: MawaqeetConfigEntry,
+    location: Mapping[str, float],
+    options: Mapping[str, Any],
 ) -> tuple[Coordinates, CalculationParameters]:
-    location: dict[str, float] = config_entry.data.get(CONF_LOCATION, {})
+    """Resolve coordinates and calculation parameters."""
     coordinates: Coordinates = (
         float(location.get(CONF_LATITUDE, 0.0)),
         float(location.get(CONF_LONGITUDE, 0.0)),
     )
-    calculation_parameters = _get_calculation_parameters(config_entry)
-    calculation_parameters.adjustments = _get_adjustments(config_entry)
+    calculation_parameters = _get_calculation_parameters(options)
+    calculation_parameters.adjustments = _get_adjustments(options)
     return coordinates, calculation_parameters
 
 
@@ -93,16 +107,19 @@ def _get_night_times(
     today: PrayerTimes, tomorrow: PrayerTimes
 ) -> tuple[timedelta, datetime, datetime]:
     night_duration = tomorrow.fajr - today.maghrib
-    half_of_night = night_duration.seconds / 2
-    third_of_night = night_duration.seconds / 3
+    half_of_night = night_duration.total_seconds() / 2
+    third_of_night = night_duration.total_seconds() / 3
     midnight = tomorrow.fajr - timedelta(seconds=half_of_night)
     last_third = tomorrow.fajr - timedelta(seconds=third_of_night)
     return night_duration, midnight, last_third
 
 
-def compute_prayer_times(config_entry: MawaqeetConfigEntry) -> MawaqeetData:
-    """Compute prayer times synchronously (adhanpy; use executor from async)."""
-    coordinates, calculation_parameters = _get_mawaqeet_parameters(config_entry)
+def compute_prayer_times_from_options(
+    location: Mapping[str, float],
+    options: Mapping[str, Any],
+) -> MawaqeetData:
+    """Compute prayer times from location and options dictionaries."""
+    coordinates, calculation_parameters = _get_mawaqeet_parameters(location, options)
     today = dt_util.now()
     tomorrow = today + timedelta(days=1)
 
@@ -129,7 +146,9 @@ def compute_prayer_times(config_entry: MawaqeetConfigEntry) -> MawaqeetData:
     }
 
     calc_params = today_prayer.calculation_parameters
-    calc_method = get_calculation_method(config_entry)
+    calc_method = options.get(
+        CALCULATION_METHOD, str(CalculationMethod.MUSLIM_WORLD_LEAGUE)
+    )
     madhab = MadhabMapper.to_mawaqeet(calc_params.madhab)
     high_latitude_rule = HighLatitudeRuleMapper.to_mawaqeet(
         calc_params.high_latitude_rule
@@ -139,7 +158,7 @@ def compute_prayer_times(config_entry: MawaqeetConfigEntry) -> MawaqeetData:
         PrayerTimeOption.CALCULATION_METHOD: str(calc_method),
         PrayerTimeOption.MADHAB: str(madhab),
         PrayerTimeOption.NIGHT_LENGTH: today_prayer.night_length,
-        PrayerTimeOption.NIGHT_DURATION: night_duration.seconds,
+        PrayerTimeOption.NIGHT_DURATION: int(night_duration.total_seconds()),
         PrayerTimeOption.HIGH_LATITUDE_RULE: str(high_latitude_rule),
         PrayerTimeOption.FAJR_ANGLE: calc_params.fajr_angle,
         PrayerTimeOption.ISHAA_ANGLE: calc_params.isha_angle,
@@ -156,6 +175,16 @@ def compute_prayer_times(config_entry: MawaqeetConfigEntry) -> MawaqeetData:
         "prayer_times": prayer_times,
         "prayer_times_config": prayer_times_config,
     }
+
+
+def compute_prayer_times(config_entry: MawaqeetConfigEntry) -> MawaqeetData:
+    """Compute prayer times synchronously (adhanpy; use executor from async)."""
+    location: dict[str, float] = config_entry.data.get(CONF_LOCATION, {})
+    options = {
+        **config_entry.options,
+        CALCULATION_METHOD: get_calculation_method(config_entry),
+    }
+    return compute_prayer_times_from_options(location, options)
 
 
 async def async_compute_prayer_times(

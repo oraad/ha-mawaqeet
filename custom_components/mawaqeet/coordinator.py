@@ -121,12 +121,14 @@ class MawaqeetDataUpdateCoordinator(DataUpdateCoordinator[MawaqeetData]):
         )
 
     def _async_fire_prayer_event(self, trigger_type: str, prayer: str) -> Any:
-        event_data = self._prayer_event_data(trigger_type, prayer)
+        """Return a callback that builds event data at fire time."""
 
         @callback
         def fire_event(dt: datetime) -> None:
             self.hass.bus.async_fire(
-                MAWAQEET_EVENT, event_data, time_fired=dt.timestamp()
+                MAWAQEET_EVENT,
+                self._prayer_event_data(trigger_type, prayer),
+                time_fired=dt.timestamp(),
             )
 
         return fire_event

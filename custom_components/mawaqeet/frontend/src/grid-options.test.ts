@@ -27,7 +27,7 @@ describe("gridOptionsForLayout", () => {
     expect(gridOptionsForLayout("timeline")).toEqual({
       columns: 12,
       rows: 3,
-      min_rows: 2,
+      min_rows: 3,
       max_rows: 4,
     });
   });

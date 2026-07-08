@@ -8,6 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 
 from .enum import REMINDER_SCHEDULE_PRAYERS
+from .options import get_calculation_method
 
 if TYPE_CHECKING:
     from .data import MawaqeetConfigEntry
@@ -35,6 +36,7 @@ async def async_get_config_entry_diagnostics(
         "unique_id": entry.unique_id,
         "data": async_redact_data(dict(entry.data), TO_REDACT),
         "options": dict(entry.options),
+        "calculation_method": get_calculation_method(entry),
         "prayer_times": prayer_times,
         "prayer_times_config": dict(data["prayer_times_config"]) if data else {},
         "reminder_schedule_prayers": [str(p) for p in REMINDER_SCHEDULE_PRAYERS],

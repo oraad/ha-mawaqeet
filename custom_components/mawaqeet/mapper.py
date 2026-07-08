@@ -55,9 +55,6 @@ class CalculationMethodMapper:
 
         calc_method_params = calc_method_params.copy()
 
-        if calc_method_params is None:
-            return calculation_parameters
-
         if (method_adj := calc_method_params.get(METHOD_ADJUSTMENTS)) is not None:
             method_adj = PrayerAdjustments(**method_adj)
             calculation_parameters[ADHANPY_METHOD_ADJUSTMENTS] = (

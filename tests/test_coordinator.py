@@ -1,7 +1,10 @@
 """Test coordinator."""
 
+from datetime import UTC, datetime
+from unittest.mock import PropertyMock, patch
+
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.mawaqeet.calculation import async_compute_prayer_times
@@ -10,6 +13,8 @@ from custom_components.mawaqeet.const import (
     DEFAULT_REMINDER_MINUTES,
     DOMAIN,
     MADHAB,
+    MAWAQEET_EVENT,
+    PRAYER_TIME_TRIGGER,
     REMINDER_ENABLED,
     REMINDER_MINUTES,
 )
@@ -126,3 +131,46 @@ async def test_legacy_reminder_minutes_fallback(hass: HomeAssistant) -> None:
 
     coordinator = MawaqeetDataUpdateCoordinator(hass, entry)
     assert coordinator._get_reminder_minutes(PrayerTime.FAJR) == 20
+
+
+async def test_scheduled_fire_resolves_device_id_at_fire_time(
+    hass: HomeAssistant,
+) -> None:
+    """Test scheduled callbacks read device_id when firing, not when scheduling."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_NAME: "Home",
+            CONF_LOCATION: {CONF_LATITUDE: 51.5074, CONF_LONGITUDE: -0.1278},
+        },
+        options={CALCULATION_METHOD: "mwl", MADHAB: "shafi"},
+    )
+    entry.add_to_hass(hass)
+
+    coordinator = MawaqeetDataUpdateCoordinator(hass, entry)
+    entry.runtime_data = MawaqeetRuntimeData(coordinator=coordinator)
+
+    fired: list[dict] = []
+
+    def capture(event: Event) -> None:
+        fired.append(event.data)
+
+    hass.bus.async_listen(MAWAQEET_EVENT, capture)
+
+    with patch.object(
+        type(coordinator),
+        "device_id",
+        new_callable=PropertyMock,
+        return_value="device-abc",
+    ) as mock_device_id:
+        fire_cb = coordinator._async_fire_prayer_event(
+            PRAYER_TIME_TRIGGER, str(PrayerTime.FAJR)
+        )
+        mock_device_id.assert_not_called()
+        fire_cb(datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC))
+        await hass.async_block_till_done()
+        mock_device_id.assert_called()
+
+    assert fired
+    assert fired[0]["device_id"] == "device-abc"
+    assert fired[0]["prayer"] == str(PrayerTime.FAJR)

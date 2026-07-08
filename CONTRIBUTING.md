@@ -63,7 +63,21 @@ Coverage is enforced at 95% for `custom_components/mawaqeet` (same flags as CI).
 HA_TEST_LATEST=1 scripts/test
 ```
 
-CI runs both on every push and pull request to `main` (see [`.github/workflows/test.yml`](.github/workflows/test.yml)).
+On Windows, host Python often fails with Home Assistant (`fcntl`). Prefer Docker:
+
+```bash
+docker run --rm -v "/c/Projects/HomeAssistant/ha-mawaqeet:/repo" -w /repo \
+  -e PIP_DISABLE_PIP_VERSION_CHECK=1 -e PIP_PREFER_BINARY=1 \
+  python:3.14-bookworm bash scripts/test
+```
+
+When changing the Lovelace card under `custom_components/mawaqeet/frontend/`, rebuild the committed bundle:
+
+```bash
+python scripts/build_frontend.py
+```
+
+CI (Test, Lint, Validate, Frontend) runs on every push and pull request to **`main`** and **`dev`** (see [`.github/workflows/`](.github/workflows/)).
 
 This custom component is based on [integration_blueprint](https://github.com/ludeeus/integration_blueprint). A dev container (`.devcontainer.json`) provides a standalone Home Assistant instance with [`config/configuration.yaml`](./config/configuration.yaml).
 

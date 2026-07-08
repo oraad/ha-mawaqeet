@@ -1,0 +1,13 @@
+---
+description: Shell conventions — bash/Git Bash/WSL/Docker on Windows
+alwaysApply: true
+---
+
+# Shell execution (agents)
+
+- Use **bash**, **WSL**, or **Docker exec** for shell commands.
+- On Windows, avoid PowerShell-native syntax (`$env:`, backtick continuations, `%CD%`).
+- Use POSIX paths in Docker volume mounts: `-v "/c/Projects/HomeAssistant/ha-mawaqeet:/repo"`.
+- Prefer Linux commands; use Docker when the host shell differs from CI (Ubuntu + bash).
+- On Windows hosts, see **`windows-shell.mdc`** for path formats, `bash -lc` wrapping, and Docker volume mounts.
+- Under `scripts/`: invoke **bash scripts** as `bash scripts/<name>` (`setup`, `lint`, `test`, `develop`). Invoke **Python** scripts as `python scripts/<name>.py` (`build_frontend.py`, brand helpers) — not via `bash`.

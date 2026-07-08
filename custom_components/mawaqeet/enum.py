@@ -36,7 +36,7 @@ class PrayerTimeOption(StrEnum):
 
     CALCULATION_METHOD = auto()
     MADHAB = auto()
-    NIGHT_LENGTH = auto()  # From Maghtib to Shuruq
+    NIGHT_LENGTH = auto()  # From Maghrib to Shuruq
     NIGHT_DURATION = auto()  # From Maghrib to Fajr
     HIGH_LATITUDE_RULE = auto()
     FAJR_ANGLE = auto()

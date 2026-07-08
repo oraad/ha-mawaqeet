@@ -16,7 +16,11 @@ from . import frontend
 from .const import DOMAIN
 from .coordinator import MawaqeetDataUpdateCoordinator
 from .data import MawaqeetRuntimeData
-from .options import migrate_options, options_need_migration
+from .options import (
+    migrate_calculation_method,
+    migrate_options,
+    options_need_migration,
+)
 from .service import async_setup_services
 
 if TYPE_CHECKING:
@@ -59,6 +63,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MawaqeetConfigEntry) -> 
                 "homeassistant_started", _register_lovelace_on_started
             )
         )
+
+    migrate_calculation_method(hass, entry)
 
     if options_need_migration(entry.options):
         hass.config_entries.async_update_entry(
