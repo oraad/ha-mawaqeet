@@ -44,11 +44,13 @@ Requires [HACS](https://hacs.xyz/). If this repository is not listed yet, add `h
 
 Configuration is done in the UI. Supported languages: **English**, **Arabic** (match your Home Assistant profile language).
 
-1. **Initial setup**: name, map location, and calculation method (MWL, ISNA, Umm Al-Qura, custom, etc.).
-2. **Adjustments** (options): madhab (Shafi/Hanafi), per-prayer **calculation** offsets (minutes), optional custom angles for the custom method, and per-prayer **reminder** lead times.
-3. **Reconfigure** (from the integration menu): change name, location, or calculation method without removing the entry.
+1. **Initial setup**: name and map location, then calculation method (MWL, ISNA, Umm Al-Qura, custom, etc.).
+2. **Adjustments** (same setup flow and later via Configure): madhab (Shafi/Hanafi), per-prayer **calculation** offsets (minutes), optional custom angles for the custom method, and per-prayer **reminder** lead times.
+3. **Reconfigure** (from the integration menu): change name or location without removing the entry. Change calculation method from **Configure** (options).
 
 Saving **options** or completing **reconfigure** reloads the integration automatically so prayer times and reminders pick up changes immediately.
+
+On the **calculation method** and **adjustments** steps, a live preview shows today’s prayer times and updates as you change method, madhab, or offsets (Home Assistant stock single-row preview).
 
 ### Configuration parameters
 
@@ -56,7 +58,7 @@ Saving **options** or completing **reconfigure** reloads the integration automat
 | --- | --- | --- |
 | Name | Yes | No |
 | Location (lat/lon) | Yes (reconfigure) | No |
-| Calculation method | Yes (reconfigure) | No |
+| Calculation method | No | Yes |
 | Madhab | No | Yes |
 | Per-prayer calculation offsets | No | Yes |
 | Custom angles / high-latitude rule | No (custom method) | Yes |
@@ -150,7 +152,7 @@ Prayer times are calculated locally (no cloud API). The coordinator refreshes at
 
 - Prayer times are **calculated locally** from coordinates and method settings; there is no link to a specific mosque timetable or cloud API.
 - **Shuruq**, **Midnight**, and **Last Third** are optional sensors; automations for the five daily prayers use Fajr through Ishaa.
-- **Reminder** events cover Fajr through Ishaa only (not Shuruq, Midnight, or Last Third).
+- **Reminder** events cover Fajr through Ishaa **including Shuruq** (not Midnight or Last Third).
 - Only **one config entry** per map position is allowed.
 - The custom Lovelace card requires adding a [Lovelace resource](#dashboard-cards) (served by the integration).
 
@@ -159,7 +161,7 @@ Prayer times are calculated locally (no cloud API). The coordinator refreshes at
 | Symptom | Things to check |
 | --- | --- |
 | Times differ from local mosque | Calculation method, madhab (Asr), and per-prayer offsets in options |
-| High-latitude odd times | Enable custom method and set high-latitude rule if needed |
+| High-latitude odd times | Set high-latitude rule in options (Configure → adjustments) |
 | Reminders not firing | Options → prayer reminders enabled; per-prayer minutes set; automations listen to reminder events |
 | Duplicate location rejected | One entry per map position; remove or reconfigure the existing entry |
 
@@ -178,6 +180,12 @@ type: custom:mawaqeet-prayer-card
 device: DEVICE_ID_FROM_SETTINGS
 layout: next
 show_shuruq: false
+show_midnight: false
+show_last_third: false
+# Optional per-prayer icon overrides (MDI). Omit a key to use the default.
+# icons:
+#   fajr: mdi:weather-sunset-up
+#   midnight: mdi:clock-time-twelve
 ```
 
 Pick the device under **Settings → Devices & services → Mawaqeet →** your location. Each config entry is one device.
@@ -204,7 +212,15 @@ lovelace:
 | `timeline` | Day timeline from Fajr to Ishaa |
 | `agenda` | “Earlier today” and “Upcoming” sections |
 
-By default the card shows the five daily prayers (Fajr, Dhuhr, Asr, Maghrib, Ishaa). Enable **Show Shuruq** in the card editor to include sunrise.
+By default the card shows the five daily prayers (Fajr, Dhuhr, Asr, Maghrib, Ishaa). Optional toggles in the card editor:
+
+| Option | Adds |
+| --- | --- |
+| **Show Shuruq** | Sunrise (between Fajr and Dhuhr) |
+| **Show Midnight** | Islamic midnight (after Ishaa) |
+| **Show Last Third** | Last third of the night (after Midnight) |
+
+Use **Custom prayer icons** in the editor (or the `icons` map in YAML) to override MDI icons per time. Leave a field empty to keep the built-in default.
 
 ### Troubleshooting
 
@@ -253,6 +269,18 @@ Run linting:
 ```bash
 scripts/lint
 ```
+
+On Windows, prefer Docker for pytest (host HA installs often fail):
+
+```bash
+docker run --rm -v "/c/Projects/HomeAssistant/ha-mawaqeet:/repo" -w /repo \
+  -e PIP_DISABLE_PIP_VERSION_CHECK=1 -e PIP_PREFER_BINARY=1 \
+  python:3.14-bookworm bash scripts/test
+```
+
+Rebuild the Lovelace card after frontend source changes: `python scripts/build_frontend.py`.
+
+Maintainers publish GitHub Releases (HACS `mawaqeet.zip`) via the Cursor `/release` command after CI is green on `main`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 

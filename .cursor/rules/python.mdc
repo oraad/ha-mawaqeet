@@ -1,0 +1,39 @@
+---
+description: Python 3.14+ execution for this Home Assistant custom integration
+alwaysApply: true
+---
+
+# Python execution (agents)
+
+- **Minimum version: Python 3.14+** — matches CI (`actions/setup-python` with `3.14`).
+- Prefer repo scripts from the project root (after `scripts/setup` when deps are missing):
+  - Install deps: `bash scripts/setup`
+  - Tests (pinned HA): `bash scripts/test`
+  - Tests (latest HA, same as CI “latest” leg): `HA_TEST_LATEST=1 bash scripts/test`
+  - Lint/format: `bash scripts/lint`
+  - Local HA instance: `bash scripts/develop` (or use [`.devcontainer.json`](.devcontainer.json) — supported local HA path; **no** Docker Compose in this repo)
+  - Lovelace card: `python scripts/build_frontend.py`
+- On Windows (host Python often fails HA/`fcntl`): run tests via **Docker**. Prefer invoking the repo script inside the container:
+
+  ```bash
+  docker run --rm -v "/c/Projects/HomeAssistant/ha-mawaqeet:/repo" -w /repo \
+    -e PIP_DISABLE_PIP_VERSION_CHECK=1 -e PIP_PREFER_BINARY=1 \
+    python:3.14-bookworm bash scripts/test
+  ```
+
+  Fallback (same flags as `scripts/test` / CI: 95% coverage):
+
+  ```bash
+  docker run --rm -v "/c/Projects/HomeAssistant/ha-mawaqeet:/repo" -w /repo \
+    -e PIP_DISABLE_PIP_VERSION_CHECK=1 -e PIP_PREFER_BINARY=1 \
+    python:3.14-bookworm bash -lc '
+      pip install -r requirements-test.txt pytest-cov &&
+      python -m pytest tests/ -v \
+        --cov=custom_components/mawaqeet \
+        --cov-report=term-missing \
+        --cov-fail-under=95
+    '
+  ```
+
+- **Do not** assume PowerShell `python` is 3.14+ or that HA tests work on Windows without Docker/WSL.
+- Do not invent solar-style `docker compose` for this repo (none exists).

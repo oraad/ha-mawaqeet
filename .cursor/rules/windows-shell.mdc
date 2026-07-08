@@ -1,0 +1,62 @@
+---
+description: Windows host shell paths, Git Bash, and Docker execution for agents
+alwaysApply: true
+---
+
+# Windows shell execution (agents)
+
+Cursor on this machine may run **PowerShell** even when commands look like bash. Repo root: `C:\Projects\HomeAssistant\ha-mawaqeet` (Git Bash: `/c/Projects/HomeAssistant/ha-mawaqeet`).
+
+## When to use which approach
+
+- **Simple commands** with no pipes, no `$()`, no HEREDOC: set Shell tool `working_directory` to `C:\Projects\HomeAssistant\ha-mawaqeet` and run them directly.
+- **Everything else** (pipes, `head`/`grep`, `$(pwd)`, `scripts/*`, git HEREDOC, `source .venv/bin/activate`): wrap in `bash -lc '…'`.
+
+## Path rules
+
+| Context | Format | Example |
+|---------|--------|---------|
+| Shell tool `working_directory` | Windows backslashes OK | `C:\Projects\HomeAssistant\ha-mawaqeet` |
+| Docker `-v` from PowerShell | Docker Desktop style | `"/c/Projects/HomeAssistant/ha-mawaqeet:/repo"` |
+| Inside WSL bash (`bash -lc`) | WSL mount path | `/mnt/c/Projects/HomeAssistant/ha-mawaqeet` |
+
+Never use `C:\…` backslashes inside Docker volume strings.
+
+`$(pwd)` and repo scripts must run inside bash, not bare PowerShell. When `bash -lc` lands in WSL, `cd` to `/mnt/c/Projects/HomeAssistant/ha-mawaqeet` (or rely on `working_directory` and skip `cd`).
+
+## Repo-canonical commands
+
+From repo root (`working_directory` or `cd "c:/Projects/HomeAssistant/ha-mawaqeet" &&`):
+
+```bash
+bash scripts/setup
+bash scripts/lint
+bash scripts/test
+HA_TEST_LATEST=1 bash scripts/test
+bash scripts/develop
+python scripts/build_frontend.py
+```
+
+One-off container (preferred for pytest on Windows — prefer `scripts/test` inside the image):
+
+```bash
+docker run --rm -v "/c/Projects/HomeAssistant/ha-mawaqeet:/repo" -w /repo \
+  -e PIP_DISABLE_PIP_VERSION_CHECK=1 -e PIP_PREFER_BINARY=1 \
+  python:3.14-bookworm bash scripts/test
+```
+
+See `python.mdc` for Python/pytest policy and coverage flags.
+
+## Anti-patterns
+
+| Avoid (PowerShell) | Use instead |
+|--------------------|-------------|
+| `Select-Object -First N` | `bash -lc '… \| head -n N'` |
+| `Select-String -Pattern` | `bash -lc '… \| grep pattern'` |
+| `$env:VAR` / backtick continuations | `export VAR=…` inside `bash -lc` |
+| `cat <<'EOF'` for git commits | Full commit wrapped in `bash -lc '…'` |
+| `C:\Projects\…` in `docker -v` | `"/c/Projects/…"` |
+
+## On failure
+
+Retry once with `bash -lc` and POSIX paths before changing command logic or abandoning the approach.
