@@ -3,7 +3,9 @@ import {
   extractPrayerKey,
   findCurrentPrayer,
   findNextPrayer,
+  PRAYER_DEFAULT_ICONS,
   resolvePrayerEntities,
+  resolvePrayerIcon,
 } from "./entity-resolver";
 import type { HomeAssistant } from "./types";
 
@@ -84,15 +86,39 @@ describe("extractPrayerKey", () => {
       extractPrayerKey({
         entity_id: "sensor.foo_fajr",
         platform: "mawaqeet",
+        translation_key: "fajr",
       }),
     ).toBe("fajr");
+  });
+});
+
+describe("resolvePrayerIcon", () => {
+  it("prefers config override over attribute and default", () => {
+    expect(
+      resolvePrayerIcon("fajr", "mdi:weather-sunset-up", {
+        fajr: "mdi:mosque",
+      }),
+    ).toBe("mdi:mosque");
+  });
+
+  it("uses state attribute when no config override", () => {
+    expect(resolvePrayerIcon("dhuhr", "mdi:custom")).toBe("mdi:custom");
+  });
+
+  it("falls back to per-prayer default, not mosque", () => {
+    expect(resolvePrayerIcon("maghrib", undefined)).toBe(
+      PRAYER_DEFAULT_ICONS.maghrib,
+    );
+    expect(resolvePrayerIcon("midnight", undefined)).toBe(
+      PRAYER_DEFAULT_ICONS.midnight,
+    );
   });
 });
 
 describe("resolvePrayerEntities", () => {
   it("returns prayers sorted in canonical order", () => {
     const hass = mockHass(sixPrayerStates(), sixPrayerEntities());
-    const prayers = resolvePrayerEntities(hass, DEVICE, false);
+    const prayers = resolvePrayerEntities(hass, DEVICE);
     expect(prayers.map((p) => p.prayer_key)).toEqual([
       "fajr",
       "dhuhr",
@@ -100,6 +126,7 @@ describe("resolvePrayerEntities", () => {
       "maghrib",
       "ishaa",
     ]);
+    expect(prayers[0].icon).toBe(PRAYER_DEFAULT_ICONS.fajr);
   });
 
   it("includes shuruq when enabled", () => {
@@ -112,7 +139,7 @@ describe("resolvePrayerEntities", () => {
       "sensor.x_shuruq": { state: iso(6, 15) },
     };
     const hass = mockHass(states, entities);
-    const prayers = resolvePrayerEntities(hass, DEVICE, true);
+    const prayers = resolvePrayerEntities(hass, DEVICE, { showShuruq: true });
     expect(prayers.map((p) => p.prayer_key)).toEqual([
       "fajr",
       "shuruq",
@@ -123,16 +150,66 @@ describe("resolvePrayerEntities", () => {
     ]);
   });
 
+  it("includes midnight and last_third after ishaa when enabled", () => {
+    const entities = {
+      ...sixPrayerEntities(),
+      "sensor.x_midnight": { translation_key: "midnight" },
+      "sensor.x_last_third": { translation_key: "last_third" },
+    };
+    const states = {
+      ...sixPrayerStates(),
+      "sensor.x_midnight": { state: iso(0, 15) },
+      "sensor.x_last_third": { state: iso(2, 30) },
+    };
+    const hass = mockHass(states, entities);
+    const prayers = resolvePrayerEntities(hass, DEVICE, {
+      showMidnight: true,
+      showLastThird: true,
+    });
+    expect(prayers.map((p) => p.prayer_key)).toEqual([
+      "fajr",
+      "dhuhr",
+      "asr",
+      "maghrib",
+      "ishaa",
+      "midnight",
+      "last_third",
+    ]);
+  });
+
+  it("keeps core prayers when optional midnight sensor is missing", () => {
+    const hass = mockHass(sixPrayerStates(), sixPrayerEntities());
+    const prayers = resolvePrayerEntities(hass, DEVICE, {
+      showMidnight: true,
+    });
+    expect(prayers.map((p) => p.prayer_key)).toEqual([
+      "fajr",
+      "dhuhr",
+      "asr",
+      "maghrib",
+      "ishaa",
+    ]);
+  });
+
+  it("applies config icon overrides", () => {
+    const hass = mockHass(sixPrayerStates(), sixPrayerEntities());
+    const prayers = resolvePrayerEntities(hass, DEVICE, {}, { fajr: "mdi:star" });
+    expect(prayers.find((p) => p.prayer_key === "fajr")?.icon).toBe("mdi:star");
+    expect(prayers.find((p) => p.prayer_key === "dhuhr")?.icon).toBe(
+      PRAYER_DEFAULT_ICONS.dhuhr,
+    );
+  });
+
   it("returns empty for wrong device", () => {
     const hass = mockHass(sixPrayerStates(), sixPrayerEntities());
-    expect(resolvePrayerEntities(hass, "other", false)).toEqual([]);
+    expect(resolvePrayerEntities(hass, "other")).toEqual([]);
   });
 });
 
 describe("findNextPrayer", () => {
   it("picks earliest future prayer", () => {
     const hass = mockHass(sixPrayerStates(), sixPrayerEntities());
-    const prayers = resolvePrayerEntities(hass, DEVICE, false);
+    const prayers = resolvePrayerEntities(hass, DEVICE);
     const now = new Date(iso(13, 0));
     const next = findNextPrayer(prayers, now);
     expect(next?.prayer.prayer_key).toBe("asr");
@@ -141,7 +218,7 @@ describe("findNextPrayer", () => {
 
   it("wraps to fajr tomorrow when all passed", () => {
     const hass = mockHass(sixPrayerStates(), sixPrayerEntities());
-    const prayers = resolvePrayerEntities(hass, DEVICE, false);
+    const prayers = resolvePrayerEntities(hass, DEVICE);
     const now = new Date(iso(22, 0));
     const next = findNextPrayer(prayers, now);
     expect(next?.prayer.prayer_key).toBe("fajr");
@@ -152,7 +229,7 @@ describe("findNextPrayer", () => {
 describe("findCurrentPrayer", () => {
   it("returns last prayer at or before now", () => {
     const hass = mockHass(sixPrayerStates(), sixPrayerEntities());
-    const prayers = resolvePrayerEntities(hass, DEVICE, false);
+    const prayers = resolvePrayerEntities(hass, DEVICE);
     const now = new Date(iso(16, 0));
     expect(findCurrentPrayer(prayers, now)?.prayer_key).toBe("asr");
   });

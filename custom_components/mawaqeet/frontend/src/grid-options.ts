@@ -15,7 +15,7 @@ export function gridOptionsForLayout(layout: CardLayout): LovelaceGridOptions {
       return {
         columns: 12,
         rows: 3,
-        min_rows: 2,
+        min_rows: 3,
         max_rows: 4,
       };
     case "vertical":

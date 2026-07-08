@@ -1,5 +1,9 @@
 /** Minimal Home Assistant types for the Lovelace card (no runtime HA dependency). */
 
+import type { PrayerKey } from "./prayer-order";
+
+export type { PrayerKey };
+
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
   entities: Record<string, EntityRegistryEntry>;
@@ -59,10 +63,14 @@ export interface MawaqeetCardConfig {
   device?: string;
   layout?: CardLayout;
   show_shuruq?: boolean;
+  show_midnight?: boolean;
+  show_last_third?: boolean;
   show_passed_style?: boolean;
   time_format?: TimeFormat;
   show_relative?: boolean;
   show_device_name?: boolean;
+  /** Per-prayer MDI icon overrides; empty/omit uses defaults. */
+  icons?: Partial<Record<PrayerKey, string>>;
   tap_action?: { action: string };
 }
 
@@ -74,5 +82,3 @@ export interface ResolvedPrayer {
   at: Date;
   state: HassEntity;
 }
-
-export type { PrayerKey } from "./prayer-order";

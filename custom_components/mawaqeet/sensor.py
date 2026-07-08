@@ -23,6 +23,8 @@ if TYPE_CHECKING:
     from .coordinator import MawaqeetDataUpdateCoordinator
     from .data import MawaqeetConfigEntry
 
+PARALLEL_UPDATES = 1
+
 ENTITY_DESCRIPTIONS = (
     SensorEntityDescription(
         key=PrayerTime.FAJR,

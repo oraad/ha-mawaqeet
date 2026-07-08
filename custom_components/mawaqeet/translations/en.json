@@ -9,19 +9,29 @@
                     "name": "Name",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "location": "Location",
-                    "calculation_method": "Calculation Method"
+                    "location": "Location"
                 },
                 "data_description": {
                     "name": "Label for this location in Home Assistant.",
-                    "location": "Map position used to calculate prayer times.",
+                    "location": "Map position used to calculate prayer times."
+                }
+            },
+            "calculation": {
+                "title": "Calculation method",
+                "description": "Preview below updates as you change the method. Times are for today at this location.",
+                "data": {
+                    "calculation_method": "Calculation Method"
+                },
+                "data_description": {
                     "calculation_method": "Preset angles and rules for your region."
                 }
             },
             "adjustment": {
                 "title": "Prayer adjustments",
+                "description": "Preview below updates as you change madhab and offsets. Reminder settings do not change the preview. Times are for today at this location.",
                 "data_description": {
                     "madhab": "Affects Asr calculation (Shafi vs Hanafi).",
+                    "high_latitude_rule": "How Fajr and Ishaa are adjusted near the poles.",
                     "reminder_enabled": "Fire reminder events before each prayer.",
                     "fajr_reminder_minutes": "Minutes before Fajr to fire the reminder event.",
                     "shuruq_reminder_minutes": "Minutes before Shuruq to fire the reminder event.",
@@ -55,13 +65,11 @@
                 "title": "Reconfigure Mawaqeet",
                 "data_description": {
                     "name": "Label for this location in Home Assistant.",
-                    "location": "Map position used to calculate prayer times.",
-                    "calculation_method": "Preset angles and rules for your region."
+                    "location": "Map position used to calculate prayer times."
                 },
                 "data": {
                     "name": "Name",
-                    "location": "Location",
-                    "calculation_method": "Calculation Method"
+                    "location": "Location"
                 }
             }
         },
@@ -78,10 +86,22 @@
     "options": {
         "flow_title": "Mawaqeet options",
         "step": {
+            "calculation": {
+                "title": "Calculation method",
+                "description": "Preview below updates as you change the method. Times are for today at this location.",
+                "data": {
+                    "calculation_method": "Calculation Method"
+                },
+                "data_description": {
+                    "calculation_method": "Preset angles and rules for your region."
+                }
+            },
             "adjustment": {
                 "title": "Prayer adjustments",
+                "description": "Preview below updates as you change madhab and offsets. Reminder settings do not change the preview. Times are for today at this location.",
                 "data_description": {
                     "madhab": "Affects Asr calculation (Shafi vs Hanafi).",
+                    "high_latitude_rule": "How Fajr and Ishaa are adjusted near the poles.",
                     "reminder_enabled": "Fire reminder events before each prayer.",
                     "fajr_reminder_minutes": "Minutes before Fajr to fire the reminder event.",
                     "shuruq_reminder_minutes": "Minutes before Shuruq to fire the reminder event.",

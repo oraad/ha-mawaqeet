@@ -35,7 +35,9 @@ export function renderError(message: string): TemplateResult {
 }
 
 function iconNode(icon: string): TemplateResult {
-  return html`<ha-icon .icon=${icon}></ha-icon>`;
+  return html`<span class="icon-slot" aria-hidden="true"
+    ><ha-icon .icon=${icon}></ha-icon
+  ></span>`;
 }
 
 function rowClick(
@@ -46,6 +48,40 @@ function rowClick(
     ev.stopPropagation();
     onTap(entityId);
   };
+}
+
+function rowKeydown(
+  entityId: string,
+  onTap: (entityId: string) => void,
+): (ev: KeyboardEvent) => void {
+  return (ev) => {
+    if (ev.key === "Enter" || ev.key === " ") {
+      ev.preventDefault();
+      ev.stopPropagation();
+      onTap(entityId);
+    }
+  };
+}
+
+function interactiveRow(
+  entityId: string,
+  onTap: (entityId: string) => void,
+  classes: string,
+  content: TemplateResult,
+  ariaLabel?: string,
+): TemplateResult {
+  return html`
+    <div
+      class=${classes}
+      @click=${rowClick(entityId, onTap)}
+      @keydown=${rowKeydown(entityId, onTap)}
+      role="button"
+      tabindex="0"
+      aria-label=${ariaLabel ?? nothing}
+    >
+      ${content}
+    </div>
+  `;
 }
 
 export function renderNext(
@@ -66,25 +102,28 @@ export function renderNext(
   const followingLabel =
     following &&
     html`Following: ${following.label} at ${formatTime(following.at, hass, tf)}`;
+  const ariaLabel = `Next prayer: ${prayer.label} ${countdown} at ${atLabel}`;
 
   return html`
     ${renderHeader(hass, config)}
-    <div
-      class="next-hero"
-      @click=${rowClick(prayer.entity_id, onTap)}
-      role="button"
-      tabindex="0"
-    >
-      ${iconNode(prayer.icon)}
-      <div class="prayer-name">${prayer.label}</div>
-      <div class="countdown">${countdown} · ${atLabel}</div>
-      ${isTomorrow
-        ? html`<div class="following">Tomorrow</div>`
-        : nothing}
-      ${followingLabel
-        ? html`<div class="following">${followingLabel}</div>`
-        : nothing}
-    </div>
+    ${interactiveRow(
+      prayer.entity_id,
+      onTap,
+      "next-hero",
+      html`
+        ${iconNode(prayer.icon)}
+        <div class="prayer-name">${prayer.label}</div>
+        <div class="countdown">${countdown}</div>
+        <div class="at-time">${atLabel}</div>
+        ${isTomorrow
+          ? html`<div class="tomorrow-badge">Tomorrow</div>`
+          : nothing}
+        ${followingLabel
+          ? html`<div class="following">${followingLabel}</div>`
+          : nothing}
+      `,
+      ariaLabel,
+    )}
   `;
 }
 
@@ -106,28 +145,28 @@ export function renderVertical(
       const isNext = p.entity_id === nextId;
       const isPassed =
         config.show_passed_style !== false && p.at.getTime() < now.getTime();
-      const classes = ["row", isNext ? "next" : "", isPassed ? "passed strike" : ""]
+      const classes = ["row", isNext ? "next" : "", isPassed ? "passed" : ""]
         .filter(Boolean)
         .join(" ");
-      return html`
-        <div
-          class=${classes}
-          @click=${rowClick(p.entity_id, onTap)}
-          role="button"
-          tabindex="0"
-        >
+      const timeLabel = formatTime(p.at, hass, tf);
+      return interactiveRow(
+        p.entity_id,
+        onTap,
+        classes,
+        html`
           ${iconNode(p.icon)}
           <span class="name">${p.label}</span>
           <span class="times">
-            <div>${formatTime(p.at, hass, tf)}</div>
+            <div>${timeLabel}</div>
             ${showRelative
               ? html`<div class="relative">
                   ${formatRelative(p.at, now)}
                 </div>`
               : nothing}
           </span>
-        </div>
-      `;
+        `,
+        `${p.label} ${timeLabel}`,
+      );
     })}
   `;
 }
@@ -154,23 +193,23 @@ export function renderHorizontal(
         const classes = ["chip", isNext ? "next" : "", isPassed ? "passed" : ""]
           .filter(Boolean)
           .join(" ");
-        return html`
-          <div
-            class=${classes}
-            @click=${rowClick(p.entity_id, onTap)}
-            role="button"
-            tabindex="0"
-          >
+        const timeLabel = formatTime(p.at, hass, tf);
+        return interactiveRow(
+          p.entity_id,
+          onTap,
+          classes,
+          html`
             ${iconNode(p.icon)}
             <div>${p.label}</div>
-            <div class="chip-time">${formatTime(p.at, hass, tf)}</div>
+            <div class="chip-time">${timeLabel}</div>
             ${showRelative
               ? html`<div class="chip-relative">
                   ${formatRelative(p.at, now)}
                 </div>`
               : nothing}
-          </div>
-        `;
+          `,
+          `${p.label} ${timeLabel}`,
+        );
       })}
     </div>
   `;
@@ -217,26 +256,33 @@ export function renderAgenda(
       const classes = ["row", isNext ? "next" : "", isPassed ? "passed" : ""]
         .filter(Boolean)
         .join(" ");
-      return html`
-        <div
-          class=${classes}
-          @click=${rowClick(p.entity_id, onTap)}
-          role="button"
-          tabindex="0"
-        >
-          ${isPassed ? html`<span class="agenda-check">✓</span>` : nothing}
+      const timeLabel = formatTime(p.at, hass, tf);
+      return interactiveRow(
+        p.entity_id,
+        onTap,
+        classes,
+        html`
+          <span class="agenda-status" aria-hidden="true">
+            ${isPassed
+              ? html`<ha-icon .icon=${"mdi:check"}></ha-icon>`
+              : nothing}
+          </span>
           ${iconNode(p.icon)}
           <span class="name">${p.label}</span>
-          <span class="times">${formatTime(p.at, hass, tf)}</span>
-        </div>
-      `;
+          <span class="times">${timeLabel}</span>
+        `,
+        `${p.label} ${timeLabel}`,
+      );
     })}
   `;
 
   return html`
     ${renderHeader(hass, config)}
     ${earlier.length ? renderSection("Earlier today", earlier) : nothing}
-    ${upcoming.length ? renderSection("Upcoming", upcoming) : renderSection("Upcoming", prayers)}
+    ${upcoming.length
+      ? renderSection("Upcoming", upcoming)
+      : html`<div class="section-title">Upcoming</div>
+          <div class="agenda-empty">All prayers complete for today</div>`}
   `;
 }
 
@@ -253,8 +299,13 @@ export function renderTimeline(
   const start = prayers[0].at.getTime();
   const end = prayers[prayers.length - 1].at.getTime();
   const span = end - start || 1;
-  const nowPct = Math.min(100, Math.max(0, ((now.getTime() - start) / span) * 100));
+  const nowPct = Math.min(
+    100,
+    Math.max(0, ((now.getTime() - start) / span) * 100),
+  );
   const tf = timeFmt(hass, config);
+  const nextInfo = findNextPrayer(prayers, now);
+  const nextId = nextInfo?.prayer.entity_id;
 
   return html`
     ${renderHeader(hass, config)}
@@ -263,17 +314,32 @@ export function renderTimeline(
       <div class="timeline-now" style="left: ${nowPct}%"></div>
       ${prayers.map((p) => {
         const left = ((p.at.getTime() - start) / span) * 100;
+        const isNext = p.entity_id === nextId;
+        const isPassed =
+          config.show_passed_style !== false && p.at.getTime() < now.getTime();
+        const classes = [
+          "timeline-marker",
+          isNext ? "next" : "",
+          isPassed ? "passed" : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+        const timeLabel = formatTime(p.at, hass, tf);
+        const label = `${p.label} ${timeLabel}`;
         return html`
           <div
-            class="timeline-marker"
+            class=${classes}
             style="left: ${left}%"
             @click=${rowClick(p.entity_id, onTap)}
+            @keydown=${rowKeydown(p.entity_id, onTap)}
             role="button"
             tabindex="0"
+            aria-label=${label}
+            title=${label}
           >
             ${iconNode(p.icon)}
             <div>${p.label}</div>
-            <div>${formatTime(p.at, hass, tf)}</div>
+            <div>${timeLabel}</div>
           </div>
         `;
       })}

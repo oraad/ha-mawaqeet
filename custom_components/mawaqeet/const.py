@@ -31,3 +31,10 @@ HIGH_LATITUDE_RULE = "high_latitude_rule"
 REMINDER_ENABLED = "reminder_enabled"
 REMINDER_MINUTES = "reminder_minutes"  # legacy global fallback
 DEFAULT_REMINDER_MINUTES = 15
+
+# Defaults used when previewing the custom calculation method before angles are set.
+CUSTOM_PREVIEW_DEFAULTS = {
+    FAJR_ANGLE: 18.0,
+    ISHAA_ANGLE: 18.0,
+    ISHAA_INTERVAL: 0,
+}

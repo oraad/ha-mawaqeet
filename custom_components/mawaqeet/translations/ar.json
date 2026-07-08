@@ -7,21 +7,31 @@
                 "description": "للمساعدة في الإعداد، راجع {documentation_url}",
                 "data_description": {
                     "name": "اسم هذا الموقع في Home Assistant.",
-                    "location": "الموقع على الخريطة لحساب أوقات الصلاة.",
-                    "calculation_method": "طريقة الحساب المناسبة لمنطقتك."
+                    "location": "الموقع على الخريطة لحساب أوقات الصلاة."
                 },
                 "data": {
                     "name": "الاسم",
                     "latitude": "خط العرض",
                     "longitude": "خط الطول",
-                    "location": "الموقع",
+                    "location": "الموقع"
+                }
+            },
+            "calculation": {
+                "title": "طريقة الحساب",
+                "description": "تُحدَّث المعاينة أدناه عند تغيير الطريقة. الأوقات لليوم في هذا الموقع.",
+                "data": {
                     "calculation_method": "طريقة الحساب"
+                },
+                "data_description": {
+                    "calculation_method": "طريقة الحساب المناسبة لمنطقتك."
                 }
             },
             "adjustment": {
                 "title": "تعديلات الصلاة",
+                "description": "تُحدَّث المعاينة أدناه عند تغيير المذهب أو التعديلات. إعدادات التذكير لا تغيّر المعاينة. الأوقات لليوم في هذا الموقع.",
                 "data_description": {
                     "madhab": "يؤثر على حساب العصر (شافعي أو حنفي).",
+                    "high_latitude_rule": "كيفية تعديل الفجر والعشاء قرب القطبين.",
                     "reminder_enabled": "إطلاق أحداث تذكير قبل كل صلاة.",
                     "fajr_reminder_minutes": "دقائق قبل الفجر لإطلاق حدث التذكير.",
                     "shuruq_reminder_minutes": "دقائق قبل الشروق لإطلاق حدث التذكير.",
@@ -55,13 +65,11 @@
                 "title": "إعادة إعداد مواقيت",
                 "data_description": {
                     "name": "اسم هذا الموقع في Home Assistant.",
-                    "location": "الموقع على الخريطة لحساب أوقات الصلاة.",
-                    "calculation_method": "طريقة الحساب المناسبة لمنطقتك."
+                    "location": "الموقع على الخريطة لحساب أوقات الصلاة."
                 },
                 "data": {
                     "name": "الاسم",
-                    "location": "الموقع",
-                    "calculation_method": "طريقة الحساب"
+                    "location": "الموقع"
                 }
             }
         },
@@ -78,10 +86,22 @@
     "options": {
         "flow_title": "خيارات مواقيت",
         "step": {
+            "calculation": {
+                "title": "طريقة الحساب",
+                "description": "تُحدَّث المعاينة أدناه عند تغيير الطريقة. الأوقات لليوم في هذا الموقع.",
+                "data": {
+                    "calculation_method": "طريقة الحساب"
+                },
+                "data_description": {
+                    "calculation_method": "طريقة الحساب المناسبة لمنطقتك."
+                }
+            },
             "adjustment": {
                 "title": "تعديلات الصلاة",
+                "description": "تُحدَّث المعاينة أدناه عند تغيير المذهب أو التعديلات. إعدادات التذكير لا تغيّر المعاينة. الأوقات لليوم في هذا الموقع.",
                 "data_description": {
                     "madhab": "يؤثر على حساب العصر (شافعي أو حنفي).",
+                    "high_latitude_rule": "كيفية تعديل الفجر والعشاء قرب القطبين.",
                     "reminder_enabled": "إطلاق أحداث تذكير قبل كل صلاة.",
                     "fajr_reminder_minutes": "دقائق قبل الفجر لإطلاق حدث التذكير.",
                     "shuruq_reminder_minutes": "دقائق قبل الشروق لإطلاق حدث التذكير.",

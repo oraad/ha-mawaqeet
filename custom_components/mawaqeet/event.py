@@ -28,6 +28,8 @@ if TYPE_CHECKING:
     from .coordinator import MawaqeetDataUpdateCoordinator
     from .data import MawaqeetConfigEntry
 
+PARALLEL_UPDATES = 1
+
 LATEST_PRAYER_TIME = "latest_prayer_time"
 LATEST_PRAYER_REMINDER = "latest_prayer_reminder"
 

@@ -9,11 +9,8 @@ export const CORE_PRAYER_KEYS = [
 ] as const;
 
 export const SHURUQ_KEY = "shuruq" as const;
-
-export const EXCLUDED_PRAYER_KEYS = new Set([
-  "midnight",
-  "last_third",
-]);
+export const MIDNIGHT_KEY = "midnight" as const;
+export const LAST_THIRD_KEY = "last_third" as const;
 
 export const DIAGNOSTIC_SENSOR_KEYS = new Set([
   "calculation_method",
@@ -34,25 +31,52 @@ export const DIAGNOSTIC_SENSOR_KEYS = new Set([
 
 export type PrayerKey =
   | (typeof CORE_PRAYER_KEYS)[number]
-  | typeof SHURUQ_KEY;
+  | typeof SHURUQ_KEY
+  | typeof MIDNIGHT_KEY
+  | typeof LAST_THIRD_KEY;
 
-export function buildPrayerOrder(showShuruq: boolean): PrayerKey[] {
-  if (!showShuruq) {
-    return [...CORE_PRAYER_KEYS];
-  }
-  return ["fajr", SHURUQ_KEY, "dhuhr", "asr", "maghrib", "ishaa"];
+export interface PrayerDisplayOptions {
+  showShuruq?: boolean;
+  showMidnight?: boolean;
+  showLastThird?: boolean;
 }
 
-export function isPrayerKey(key: string, showShuruq: boolean): key is PrayerKey {
-  if (EXCLUDED_PRAYER_KEYS.has(key) || DIAGNOSTIC_SENSOR_KEYS.has(key)) {
+export function buildPrayerOrder(options: PrayerDisplayOptions = {}): PrayerKey[] {
+  const order: PrayerKey[] = ["fajr"];
+  if (options.showShuruq) {
+    order.push(SHURUQ_KEY);
+  }
+  order.push("dhuhr", "asr", "maghrib", "ishaa");
+  if (options.showMidnight) {
+    order.push(MIDNIGHT_KEY);
+  }
+  if (options.showLastThird) {
+    order.push(LAST_THIRD_KEY);
+  }
+  return order;
+}
+
+/** Core five always required; Shuruq is required when enabled. Night extras are optional. */
+export function requiredPrayerCount(options: PrayerDisplayOptions = {}): number {
+  return 5 + (options.showShuruq ? 1 : 0);
+}
+
+export function isPrayerKey(
+  key: string,
+  options: PrayerDisplayOptions = {},
+): key is PrayerKey {
+  if (DIAGNOSTIC_SENSOR_KEYS.has(key)) {
     return false;
   }
-  const order = buildPrayerOrder(showShuruq);
+  const order = buildPrayerOrder(options);
   return (order as readonly string[]).includes(key);
 }
 
-export function prayerSortIndex(key: PrayerKey, showShuruq: boolean): number {
-  const order = buildPrayerOrder(showShuruq);
+export function prayerSortIndex(
+  key: PrayerKey,
+  options: PrayerDisplayOptions = {},
+): number {
+  const order = buildPrayerOrder(options);
   const index = order.indexOf(key);
   return index === -1 ? 999 : index;
 }
