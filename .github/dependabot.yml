@@ -13,3 +13,12 @@ updates:
     ignore:
       # Dependabot should not update Home Assistant as that should match the homeassistant key in hacs.json
       - dependency-name: "homeassistant"
+      # Frontend pin tracks the same supported HA release as homeassistant above.
+      - dependency-name: "home-assistant-frontend"
+      # pytest-homeassistant-custom-component tracks latest HA daily; raising its
+      # floor above the pinned HA stack causes ResolutionImpossible (e.g. #51).
+      # The CI "latest" leg already upgrades this package separately.
+      - dependency-name: "pytest-homeassistant-custom-component"
+      # Pillow is pinned by Home Assistant; raising the floor above that pin
+      # breaks combined requirements.txt resolution (e.g. #53).
+      - dependency-name: "Pillow"
