@@ -1,5 +1,5 @@
 pip>=26.1.2
-fonttools>=4.55.0
+fonttools>=4.63.0
 Pillow>=10.0.0
 mypy==2.2.0
 resvg-py>=0.3.2
