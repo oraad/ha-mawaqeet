@@ -1,7 +1,7 @@
 pip>=26.1.2
 fonttools>=4.55.0
 Pillow>=10.0.0
-mypy==2.2.0
+mypy==2.3.0
 resvg-py>=0.3.2
 ruff==0.15.7
 types-PyYAML>=6.0.12.20260518
